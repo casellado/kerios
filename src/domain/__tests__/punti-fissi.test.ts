@@ -5,8 +5,7 @@ import { validitaPrelievo, controlloTipoA } from '../cls.ts';
 /**
  * PUNTI FISSI — ancore verificate A MANO (non generate). Affiancano le proprietà
  * (proprieta.test.ts) e i casi reali ST36 (io/__tests__/st36.test.ts).
- * NOTA: docs/casi-test-cto.md (gli "8 casi del CTO") NON è presente nel repo;
- * quando arriverà, i suoi casi vanno aggiunti qui come test espliciti.
+ * Gli "8 casi del CTO" (docs/casi-test-cto.md) sono encodati in casi-cto.test.ts.
  */
 
 let n = 0;
