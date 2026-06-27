@@ -130,9 +130,15 @@ ui/         (React)  ──>  domain/  (TS puro)  ──>  io/  (persistenza, pa
 
 ## Documenti di riferimento (leggi in quest'ordine)
 
+0. `docs/filosofia-kerios.md` — LA BUSSOLA: il ponte A→B, automatismo dove
+   toglie fatica / umano dove serve controllo. Leggere per prima.
 1. `docs/dominio-ntc.md` — le regole di calcolo (il cuore).
 2. `docs/architettura.md` — strati, tipi, struttura cartelle.
 3. `docs/persistenza.md` — cartella di lavoro, handle, file di progetto.
+3b. `docs/struttura-cartelle.md` — struttura cartelle fissa + condivisione "verità"
+    su OneDrive (no sync; Kerios desktop monoutente per pochi resp. qualità).
+3c. `docs/correzioni-e-viste.md` — viste (pezzo/verità, no modalità) + politica
+    correzioni (libera sui dati, tracciata sui verbali firmati, a tutela del DL).
 4. `docs/numerazione-cuore.md` — il Cuore (progressivi) e la famiglia di app.
 5. `docs/second-brain.md` — persistenza e suggerimenti dall'uso (no AI).
 6. `docs/scala-e-persistenza.md` — IndexedDB, partizionamento, performance.

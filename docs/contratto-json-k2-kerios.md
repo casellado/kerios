@@ -55,6 +55,10 @@ cartella OneDrive di trasporto, vedi numerazione-cuore.md).
   ],
   "allegati": [                       // DDT (cls) / doc trasporto+colate (acciaio)
     { "tipo": "DDT", "nomeFile": "…", "rif": "…" }
+  ],
+  "statoFirma": "bozza",              // "bozza" | "firmato"
+  "correzioni": [                     // SOLO se firmato: traccia modifiche post-firma
+    { "campo": "datiPrelievo.slumpMm", "da": "150", "a": "160", "data": "2026-06-28" }
   ]
   // acciaio: invece di "provini" → "saggi" (vedi SaggioAcciaio, dominio §2.4),
   // ogni saggio con diametro, nSpezzoni, lunghezzaMl, colata, identificativo.

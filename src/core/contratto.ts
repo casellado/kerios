@@ -33,6 +33,23 @@ export interface AllegatoRif {
   rif?: string;
 }
 
+/** Stato firma del verbale: 'firmato' abilita la tracciatura delle correzioni. */
+export type StatoFirma = 'bozza' | 'firmato';
+
+/**
+ * Voce di changelog di una correzione POST-FIRMA. Esiste SOLO sui verbali
+ * firmati (confine posto dal PO), a TUTELA del DL: dimostra che una modifica è
+ * avvenuta in modo trasparente. Vedi docs/correzioni-e-viste.md §4.
+ */
+export interface CorrezioneVerbale {
+  /** percorso del campo corretto, es. "datiPrelievo.slumpMm". */
+  campo: string;
+  da: string;
+  a: string;
+  /** data della correzione, ISO `aaaa-mm-gg`. */
+  data: string;
+}
+
 /**
  * Il verbale prodotto da K2. Autosufficiente: contiene tutto ciò che serve a
  * Kerios per ricostruirlo SENZA dipendere dallo stato di K2.
@@ -71,4 +88,9 @@ export interface VerbaleJSON {
   /** Firme acquisite in K2 (immagini). */
   presenti?: FirmaPresente[];
   allegati?: AllegatoRif[];
+
+  /** Stato firma. Default logico 'bozza' finché non firmato in K2. */
+  statoFirma?: StatoFirma;
+  /** Changelog post-firma — presente SOLO se `statoFirma === 'firmato'`. */
+  correzioni?: CorrezioneVerbale[];
 }
