@@ -16,7 +16,7 @@
  * WBS). I tipi di dominio vivono in core/ (non si duplicano qui).
  */
 import Dexie, { type Table } from 'dexie';
-import type { Prelievo } from '../core/index.ts';
+import type { Prelievo, ControlloSalvato } from '../core/index.ts';
 
 /**
  * Indice di sintesi per WBS — alimenta il Quadro generale SENZA caricare i
@@ -32,12 +32,18 @@ export interface SintesiWbs {
 export class KeriosDB extends Dexie {
   prelieviCls!: Table<Prelievo, string>;
   sintesiWbs!: Table<SintesiWbs, string>;
+  controlliCls!: Table<ControlloSalvato, string>;
 
   constructor() {
     super('kerios');
     this.version(1).stores({
       prelieviCls: 'id, wbs, rck, mix, data',
       sintesiWbs: '&wbs',
+    });
+    // v2: i controlli salvati (referenziano i prelievi per id). Le tabelle v1
+    // restano valide; Dexie migra senza perdere i prelievi già importati.
+    this.version(2).stores({
+      controlliCls: 'id, wbs, tipo, rck',
     });
   }
 }

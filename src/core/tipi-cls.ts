@@ -76,6 +76,29 @@ export interface Disuguaglianza {
   ok: boolean;
 }
 
+/** Strategie di raggruppamento (§1.4-quater). La strategia PROPONE, l'utente DISPONE. */
+export type ModoRaggruppamento = 'auto' | 'assistito' | 'manuale';
+
+/** Proposta EDITABILE di un gruppo di prelievi (il motore NTC è ignaro della strategia). */
+export interface ProtostaControllo {
+  prelieviIds: string[];
+  avvisi: string[];
+}
+
+/** Controllo salvato: referenzia i prelievi per ID (non li copia — single source of truth). */
+export interface ControlloSalvato {
+  id: string;
+  wbs: string;
+  tipo: TipoControllo;
+  rck: number;
+  mix?: string;
+  prelieviIds: string[];
+  esito: 'conforme' | 'non_conforme';
+  rckEffettiva?: number; // solo Tipo A
+  forzato: boolean; // l'utente ha confermato nonostante avvisi
+  generato: string; // ISO timestamp
+}
+
 export interface RisultatoControllo {
   tipo: TipoControllo;
   n: number;

@@ -5,3 +5,5 @@
 export * from './stats.ts';
 export * from './date.ts';
 export * from './cls.ts';
+export * from './raggruppa.ts';
+export * from './controllo.ts';
