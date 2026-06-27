@@ -9,3 +9,5 @@
  * È TS PURO: niente React, niente DOM, niente strato io (forzato da ESLint).
  */
 export * from './contratto.ts';
+export * from './tipi-cls.ts';
+export * from './soglie.ts';

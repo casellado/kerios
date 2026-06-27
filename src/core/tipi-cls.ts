@@ -1,0 +1,82 @@
+/**
+ * Tipi di dominio CALCESTRUZZO. In `core/` perché sono condivisibili e devono
+ * poter essere estratti in `kerios-core` (M11). TS PURO (niente React/DOM/io).
+ *
+ * Fonte: docs/dominio-ntc.md §1 e §3. Modella il CICLO DI VITA a 3 fasi: i campi
+ * di Fase 2 (trasmesso) e Fase 3 (refertato) sono OPZIONALI; lo stato è DERIVATO
+ * (non un campo digitato). Il modello regge l'inserimento incrementale (M9) fin
+ * da ora, anche se il form arriva dopo.
+ */
+
+export type StatoPrelievo = 'verbale' | 'trasmesso' | 'refertato';
+
+/** Singolo cubetto/provino del verbale (lettere A..D). */
+export interface Provino {
+  lettera?: string;
+  note?: string;
+}
+
+export interface Prelievo {
+  id: string;
+
+  // --- Fase 1: VERBALE (sempre presenti) ---
+  verbale: string;
+  data: string; // data verbale, gg/mm/aaaa
+  wbs: string;
+  parte: string;
+  rck: number;
+  mix: string;
+  massaVolumica?: number; // kg/m³ (UNI EN 12390-7), colonna prima di Rck
+  volumeGetto?: number; // m³ (avviso limite 300 m³)
+  slump?: number; // mm, consistenza al getto
+  oraPartenza?: string; // hh:mm
+  oraArrivo?: string; // hh:mm
+  oraScarico?: string; // hh:mm
+
+  // --- Fase 2: TRASMESSO (opzionali finché non si invia la lettera) ---
+  lettera?: string;
+  dataRichiesta?: string;
+  protRicezione?: string;
+  dataRicezione?: string;
+
+  // --- Fase 3: REFERTATO (opzionali finché non arriva il certificato) ---
+  certificato?: string;
+  dataCertificato?: string;
+  laboratorio?: string;
+  dataProva?: string;
+  r1?: number; // N/mm² — resistenza del 1° provino provato
+  r2?: number; // N/mm² — resistenza del 2° provino provato
+
+  // derivati (calcolati, non digitati): rmedio = (r1+r2)/2; stato = statoPrelievo(p)
+}
+
+export interface EsitoValidita {
+  scartoPct: number; // arrotondato a 2 decimali (come il documento del PO)
+  valido: boolean;
+}
+
+export type TipoControllo = 'A' | 'B';
+
+export interface Disuguaglianza {
+  richiesto: number;
+  valore: number;
+  ok: boolean;
+}
+
+export interface RisultatoControllo {
+  tipo: TipoControllo;
+  n: number;
+  rck: number;
+  rcm28: number; // media delle Rc (N/mm²)
+  rcmin: number; // minimo delle Rc (N/mm²)
+  /** MIN(Rmin+3,5; Rm−3,5). SOLO Tipo A (undefined per Tipo B, decisione CTO). */
+  rckEffettiva?: number;
+  s?: number; // scarto quadratico medio (n−1) — solo Tipo B
+  cv?: number; // coefficiente di variazione — solo Tipo B
+  disug1: Disuguaglianza;
+  disug2: Disuguaglianza;
+  conforme: boolean;
+  forzato: boolean; // true se l'utente conferma nonostante gli avvisi
+  avvisi: string[];
+  miscelaOmogenea: boolean; // false se i prelievi hanno mix diversi
+}
