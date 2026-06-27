@@ -1,0 +1,96 @@
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+
+.titolo {
+  margin: 0 0 24px;
+  font-size: 26px;
+}
+
+.porte {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.porta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 18px 18px 0;
+  text-decoration: none;
+  color: var(--ink);
+  transition:
+    border-color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.porta:hover {
+  border-color: var(--accent, var(--steel));
+  transform: translateY(-1px);
+}
+
+/* Barra colore laterale per materiale (design.md). */
+.accent {
+  width: 6px;
+  align-self: stretch;
+  border-radius: var(--radius) 0 0 var(--radius);
+  background: var(--accent, var(--steel));
+}
+
+.porta[data-mat='cls'] {
+  --accent: var(--steel);
+}
+.porta[data-mat='steel'] {
+  --accent: #6b7280;
+}
+.porta[data-mat='quadro'] {
+  --accent: var(--signal);
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.nome {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.sub {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.freccia {
+  font-size: 20px;
+  color: var(--accent, var(--steel));
+  padding-right: 4px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  border-radius: 999px;
+  padding: 4px 10px;
+}

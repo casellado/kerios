@@ -1,0 +1,51 @@
+# Build + deploy su Cloudflare Pages.
+#
+# Metodo CORRENTE (verificato 2026): cloudflare/wrangler-action@v3 con
+# `pages deploy`. cloudflare/pages-action è DEPRECATO.
+# https://github.com/cloudflare/wrangler-action  ·  https://github.com/cloudflare/pages-action
+#
+# ATTIVAZIONE (a carico del PO, una tantum):
+#  1. Creare il progetto Pages su Cloudflare (collegato al repo GitHub privato).
+#  2. Aggiungere i secret del repo: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+#  3. (Opzionale) variabile CF_PAGES_PROJECT col nome progetto (default: kerios).
+# Finché i secret non ci sono, lo step di deploy viene saltato: la build gira lo stesso.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+      - name: Deploy su Cloudflare Pages
+        # I secret non sono usabili direttamente in `if`: si mappano su env e si
+        # controlla env (pattern affidabile). Salta in PR e se il token manca.
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        if: ${{ github.event_name == 'push' && env.CF_TOKEN != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CF_PAGES_PROJECT || 'kerios' }}

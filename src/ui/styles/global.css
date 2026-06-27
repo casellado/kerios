@@ -1,0 +1,85 @@
+/* Token globali — fonte: docs/design.md e reference/index.html.
+   "Strumento tecnico di precisione": niente default AI (cream+serif+terracotta). */
+:root {
+  --ink: #14181d;
+  --ink-soft: #4a5460;
+  --line: #d4d9df;
+  --line-soft: #e7eaee;
+  --paper: #f3f5f7;
+  --surface: #ffffff;
+  --steel: #1f3a5f;
+  --steel-700: #16293f;
+  --signal: #f5c518;
+  --ok: #1f7a4d;
+  --ok-bg: #e6f4ec;
+  --warn: #b06a00;
+  --warn-bg: #fbf0db;
+  --bad: #b3261e;
+  --bad-bg: #fbe8e7;
+  --focus: #2f6df6;
+
+  --mono: 'SFMono-Regular', ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --radius: 8px;
+  --gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--steel);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+/* Focus visibile 3px su tutto (a11y vincolante, CLAUDE.md §5). */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Etichette di sezione: maiuscoletto spaziato. */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+/* Rispetto di prefers-reduced-motion (vincolante). */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

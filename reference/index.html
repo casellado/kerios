@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kerios — Controlli di accettazione NTC 2018</title>
+<style>
+  /* ============================================================
+     KERIOS — design tokens
+     Direzione: strumento tecnico di precisione. Palette da
+     quadro di cantiere / strumentazione: blu acciaio profondo,
+     fondo grafite chiaro, accento giallo-segnale (sicurezza).
+     ============================================================ */
+  :root {
+    --ink:        #14181d;   /* testo principale, quasi nero blu */
+    --ink-soft:   #4a5460;   /* testo secondario */
+    --line:       #d4d9df;   /* righe/hairline */
+    --line-soft:  #e7eaee;
+    --paper:      #f3f5f7;   /* fondo app */
+    --surface:    #ffffff;   /* superfici/card */
+    --steel:      #1f3a5f;   /* blu acciaio, brand */
+    --steel-700:  #16293f;
+    --signal:     #f5c518;   /* giallo segnale, accento */
+    --ok:         #1f7a4d;   /* conforme */
+    --ok-bg:      #e6f4ec;
+    --warn:       #b06a00;   /* attenzione */
+    --warn-bg:    #fbf0db;
+    --bad:        #b3261e;   /* non conforme / prelievo nullo */
+    --bad-bg:     #fbe8e7;
+    --focus:      #2f6df6;
+    --mono: "SFMono-Regular", ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* focus visibile ovunque — requisito accessibilità */
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  /* ---------- header brand ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 22px;
+    background: var(--steel-700);
+    color: #fff;
+    border-bottom: 3px solid var(--signal);
+  }
+  .brand {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .brand .mark {
+    font-family: var(--mono);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    font-size: 18px;
+    color: #fff;
+  }
+  .brand .mark b { color: var(--signal); }
+  .brand .tag {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9fb2c8;
+  }
+  .topbar .spacer { flex: 1; }
+  .topbar .ctx {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #c5d2e0;
+  }
+
+  /* ---------- breadcrumb / nav ---------- */
+  .crumb {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 22px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .crumb button {
+    font: inherit; color: var(--steel); background: none; border: none;
+    cursor: pointer; padding: 2px 4px; border-radius: 4px;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .crumb .sep { color: var(--line); }
+
+  main { padding: 26px 22px 60px; max-width: 1500px; margin: 0 auto; }
+
+  /* ============================================================
+     HOME — le tre porte
+     ============================================================ */
+  .home-intro { margin: 10px 0 28px; }
+  .home-intro h1 {
+    font-size: 26px; margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  .home-intro p { margin: 0; color: var(--ink-soft); max-width: 60ch; }
+
+  .gates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+  }
+  .gate {
+    position: relative;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 22px 20px;
+    cursor: pointer;
+    font: inherit; color: inherit;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+    overflow: hidden;
+  }
+  .gate::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    background: var(--accent, var(--steel));
+  }
+  .gate:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(20,40,70,.10); border-color: var(--steel); }
+  .gate .idx {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-soft);
+    letter-spacing: .15em;
+  }
+  .gate h2 { margin: 8px 0 4px; font-size: 19px; }
+  .gate p { margin: 0; color: var(--ink-soft); font-size: 13px; }
+  .gate .meta {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+    display: flex; gap: 16px;
+  }
+  .gate .meta b { color: var(--ink); font-weight: 600; }
+  .gate[data-mat="cls"]   { --accent: var(--steel); }
+  .gate[data-mat="steel"] { --accent: #6b7280; }
+  .gate[data-mat="quadro"]{ --accent: var(--signal); }
+
+  /* ============================================================
+     MODULO CLS
+     ============================================================ */
+  .toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .btn {
+    font: inherit; font-size: 13px; font-weight: 600;
+    padding: 9px 15px; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--steel); background: var(--steel); color: #fff;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background .12s;
+  }
+  .btn:hover { background: var(--steel-700); }
+  .btn.secondary { background: var(--surface); color: var(--steel); }
+  .btn.secondary:hover { background: var(--line-soft); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* filtri */
+  .filters {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px 16px;
+    align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .field select, .field input {
+    font: inherit; font-size: 13px;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--paper); color: var(--ink);
+  }
+  .field select:focus, .field input:focus { background: #fff; }
+  .filters .reset {
+    align-self: end;
+  }
+
+  /* riepilogo selezione */
+  .selbar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--steel-700); color: #fff;
+    padding: 11px 16px; border-radius: 9px; margin-bottom: 14px;
+  }
+  .selbar .count { font-family: var(--mono); font-size: 13px; }
+  .selbar .count b { color: var(--signal); font-size: 15px; }
+  .selbar .mixwarn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #14181d;
+    background: var(--signal); padding: 4px 9px; border-radius: 5px;
+  }
+  .selbar .spacer { flex: 1; }
+
+  /* tabella */
+  .tablewrap {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; overflow: auto;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: #eef1f4; color: var(--ink);
+    text-align: left; font-weight: 600;
+    padding: 9px 10px; white-space: nowrap;
+    border-bottom: 2px solid var(--line);
+    font-size: 11px; letter-spacing: .03em; text-transform: uppercase;
+  }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tbody tr:hover { background: #f7f9fb; }
+  tbody tr[aria-selected="true"] { background: #eaf1fb; }
+  tbody tr[aria-selected="true"]:hover { background: #e1ebfa; }
+
+  td.num, th.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+  td.code { font-family: var(--mono); font-size: 12px; }
+  .desc { min-width: 240px; }
+
+  /* link documento */
+  .doclink {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--steel); background: none; border: 1px dashed var(--line);
+    border-radius: 5px; padding: 3px 7px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .doclink:hover { border-color: var(--steel); background: var(--line-soft); }
+  .doclink .ic { opacity: .6; }
+
+  /* badge esito prelievo */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px; white-space: nowrap;
+  }
+  .badge.ok   { background: var(--ok-bg);   color: var(--ok); }
+  .badge.bad  { background: var(--bad-bg);  color: var(--bad); }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .chk { width: 17px; height: 17px; cursor: pointer; accent-color: var(--steel); }
+
+  .mixcell { display: flex; flex-direction: column; gap: 2px; }
+  .mixcell .mixchip {
+    display: inline-block; width: fit-content;
+    font-family: var(--mono); font-size: 10px;
+    padding: 1px 6px; border-radius: 4px; color: #fff;
+  }
+
+  .empty {
+    padding: 50px 20px; text-align: center; color: var(--ink-soft);
+  }
+  .empty .big { font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+
+  .hidden { display: none !important; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* placeholder sezioni non ancora costruite */
+  .stub {
+    background: var(--surface); border: 1px dashed var(--line);
+    border-radius: 10px; padding: 40px; text-align: center; color: var(--ink-soft);
+  }
+  .stub h2 { color: var(--ink); margin-top: 0; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">KER<b>I</b>OS</span>
+    <span class="tag">Controlli di accettazione · NTC 2018</span>
+  </div>
+  <span class="spacer"></span>
+  <span class="ctx" id="ctxLabel">nessuna cartella di lavoro</span>
+</header>
+
+<nav class="crumb" aria-label="Percorso di navigazione">
+  <button id="crumbHome" type="button">Kerios</button>
+  <span class="sep" id="crumbSep" aria-hidden="true">›</span>
+  <span id="crumbCurrent"></span>
+</nav>
+
+<main>
+  <!-- ============== HOME ============== -->
+  <section id="viewHome" aria-label="Selezione modulo">
+    <div class="home-intro">
+      <h1>Controlli di accettazione</h1>
+      <p>Carica i registri delle prove, raggruppa i prelievi e genera i controlli di accettazione verificati secondo le NTC 2018. Scegli un materiale per iniziare.</p>
+    </div>
+    <div class="gates">
+      <button class="gate" data-mat="cls" data-go="cls" type="button" aria-label="Apri il modulo Calcestruzzi">
+        <span class="idx">MATERIALE 01</span>
+        <h2>Calcestruzzi</h2>
+        <p>Resistenza dei prelievi, controllo Tipo A e Tipo B su miscela omogenea.</p>
+        <span class="meta"><span><b id="gateClsCount">22</b> prelievi</span><span>§ 11.2.5</span></span>
+      </button>
+      <button class="gate" data-mat="steel" data-go="steel" type="button" aria-label="Apri il modulo Acciaio">
+        <span class="idx">MATERIALE 02</span>
+        <h2>Acciaio</h2>
+        <p>Tondini B450C/B450A, controllo in cantiere per lotti fino a 30 t.</p>
+        <span class="meta"><span><b>—</b> lotti</span><span>§ 11.3.2</span></span>
+      </button>
+      <button class="gate" data-mat="quadro" data-go="quadro" type="button" aria-label="Apri il Quadro generale per opera">
+        <span class="idx">SINTESI 03</span>
+        <h2>Quadro generale</h2>
+        <p>Stato dei controlli aggregato per WBS / opera e parte d'opera, calcestruzzo e acciaio insieme.</p>
+        <span class="meta"><span><b>auto</b></span><span>per WBS</span></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============== MODULO CLS ============== -->
+  <section id="viewCls" class="hidden" aria-label="Modulo Calcestruzzi">
+    <div class="toolbar">
+      <button class="btn" id="btnLoad" type="button">Carica registro CSV…</button>
+      <button class="btn secondary" id="btnDemo" type="button">Usa dati di esempio (ST11)</button>
+      <input type="file" id="fileInput" accept=".csv" class="hidden" aria-hidden="true">
+    </div>
+
+    <div class="filters" id="filters" role="group" aria-label="Filtri prelievi" hidden>
+      <div class="field">
+        <label for="fWbs">WBS / Opera</label>
+        <select id="fWbs"><option value="">Tutte</option></select>
+      </div>
+      <div class="field">
+        <label for="fParte">Parte d'opera</label>
+        <select id="fParte"><option value="">Tutte</option></select>
+      </div>
+      <div class="field">
+        <label for="fRck">Rck</label>
+        <select id="fRck"><option value="">Tutte</option></select>
+      </div>
+      <div class="field">
+        <label for="fMix">Mix design</label>
+        <select id="fMix"><option value="">Tutti</option></select>
+      </div>
+      <div class="field">
+        <label for="fSearch">Ricerca libera</label>
+        <input type="text" id="fSearch" placeholder="verbale, descrizione, certificato…" aria-label="Ricerca libera nel registro">
+      </div>
+      <div class="field reset">
+        <button class="btn secondary" id="btnReset" type="button">Azzera filtri</button>
+      </div>
+    </div>
+
+    <div class="selbar" id="selbar" hidden aria-live="polite">
+      <span class="count"><b id="selCount">0</b> prelievi selezionati</span>
+      <span class="mixwarn hidden" id="mixWarn">⚠ miscele diverse selezionate</span>
+      <span class="spacer"></span>
+      <button class="btn" id="btnGenerate" type="button" disabled>Genera controllo di accettazione</button>
+      <button class="btn secondary" id="btnClearSel" type="button">Deseleziona</button>
+    </div>
+
+    <div class="tablewrap" id="tablewrap" hidden>
+      <table aria-label="Registro prelievi calcestruzzo">
+        <thead>
+          <tr>
+            <th scope="col"><span class="sr-only">Selezione</span></th>
+            <th scope="col">Verbale</th>
+            <th scope="col">Data</th>
+            <th scope="col" class="desc">Parte d'opera</th>
+            <th scope="col">Mix design</th>
+            <th scope="col" class="num">Rck</th>
+            <th scope="col" class="num">R1</th>
+            <th scope="col" class="num">R2</th>
+            <th scope="col" class="num">R medio</th>
+            <th scope="col">Esito prelievo</th>
+            <th scope="col">Lettera</th>
+            <th scope="col">Certificato</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="empty" id="emptyState">
+      <div class="big">Nessun registro caricato</div>
+      <div>Carica un file CSV o prova con i dati di esempio del cantiere ST11.</div>
+    </div>
+  </section>
+
+  <!-- ============== STUB ACCIAIO ============== -->
+  <section id="viewSteel" class="hidden" aria-label="Modulo Acciaio">
+    <div class="stub">
+      <h2>Acciaio — in costruzione</h2>
+      <p>Controllo per lotti fino a 30 t secondo § 11.3.2. Lo costruiamo dopo aver validato il modulo Calcestruzzi.</p>
+    </div>
+  </section>
+
+  <!-- ============== STUB QUADRO ============== -->
+  <section id="viewQuadro" class="hidden" aria-label="Quadro generale">
+    <div class="stub">
+      <h2>Quadro generale — in costruzione</h2>
+      <p>Vista aggregata automatica per WBS / opera che proietta i controlli di calcestruzzo e acciaio. Si popola dai controlli generati negli altri due moduli.</p>
+    </div>
+  </section>
+</main>
+
+<div aria-live="assertive" class="sr-only" id="liveRegion"></div>
+
+<script>
+/* ============================================================
+   KERIOS — logica prototipo (vanilla, single-file)
+   ============================================================ */
+
+// ---- dati di esempio: registro reale ST11 (anonimizzato nei codici? no, codici tecnici ok) ----
+const DEMO_CSV = `VERBALE DL;DATA VERBALE DL;WBS;DESCRIZIONE E PARTE D'OPERA VERBALE DL;DDT;IMPIANTO;MIX - SOTTOMISSIONE;PROTOCOLLO RICHIESTA D.L.;DATA;PROTOCOLLO RICEZIONE D.L.;DATA;NUMERO CERTIFICATO;DATA CERTIFICATO;LABORATORIO;DATA PROVA;Rck;R1 [N/mmq];R2 [N/mmq];R medio;NOTE
+CLS 5607;13/07/2023;ST11 ;Sottovia - Magrone Fondazione - KM(11+871,15);1474;_3_G_Jonica_scarl_Cassano_CS;PP01R15X0S4IF - 07-33/2022;CDG-0536099-U;20/07/2023;CDG-0683064-E;04/09/2023;621663;28/08/2023;SIDERCEM;10/08/2023;15;24;23,3;23,7;
+CLS 5683;21/07/2023;ST11 ;Sottovia - Fondazione 1°Concio (Lato Monte) - KM(11+871,50);1589;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0631737-U;07/08/2023;CDG-0719478-E;18/09/2023;621962;12/09/2023;SIDERCEM;21/08/2023;40;56,5;49;52,8;
+CLS 5684;21/07/2023;ST11 ;Sottovia - Fondazione 1°Concio (Lato Monte) - KM(11+871,50);1590;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0631737-U;07/08/2023;CDG-0719478-E;18/09/2023;621962;12/09/2023;SIDERCEM;21/08/2023;40;46,5;44,3;45,4;
+CLS 5695;22/07/2023;ST11 ;Sottovia - Fondazione Concio 2  (Lato Mare) - KM(11+871,15);1603;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0631737-U;07/08/2023;CDG-0719478-E;18/09/2023;621962;12/09/2023;SIDERCEM;21/08/2023;40;54,2;48,2;51,2;
+CLS 5764;31/07/2023;ST11 ;Sottovia - Getto Piedritto Concio N°1 - Lato Monte (TA) KM(10+238,00);1706;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;30/08/2023;40;53,6;54,3;54;A CAUSA DI UN REFUSO LA PK CORRETTA E' 11+871.
+CLS 5765;31/07/2023;ST11 ;Sottovia - Getto Piedritto Concio N°1 - Lato Monte (TA) KM(10+238,00);1707;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;30/08/2023;40;52,2;52,7;52,5;A CAUSA DI UN REFUSO LA PK CORRETTA E' 11+871.
+CLS 5808;02/08/2023;ST11 ;Sottovia - Piedritto Concio 2 (Lato Mare) Dir. TA - KM(11+871);1771;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;30/08/2023;40;47,2;43,4;45,3;
+CLS 5832;04/08/2023;ST11 ;Sottovia - Piedritto Concio 1 (Lato Monte) Dir. RC - KM(11+871);1821;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;01/09/2023;40;50,4;56,8;53,6;
+CLS 5859;09/08/2023;ST11 ;Sottovia - Piedritto Concio  (Lato Valle) Sud - KM(11+871,15);1864;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;06/09/2023;40;58,2;54,3;56,3;
+CLS 5860;09/08/2023;ST11 ;Sottovia - Piedritto Concio  (Lato Valle) Sud - KM(11+871,15);1865;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;06/09/2023;40;54,8;49,9;52,4;
+CLS 5861;09/08/2023;ST11 ;Sottovia - Piedritto Concio  (Lato Valle) Sud - KM(11+871,15);1866;_3_G_Jonica_scarl_Cassano_CS;PP01R40XC2S4IF - 07-36/2022;CDG-0662898-U;24/08/2023;CDG-0735443-E;22/09/2023;622050;15/09/2023;SIDERCEM;06/09/2023;40;48;53,1;50,6;
+CLS 5953;31/08/2023;ST11 ;Sottovia - Soletta Del Concio - (Lato Monte) - KM(11+871,15);14/007963;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0704210-U;11/09/2023;CDG-0782530-E;09/10/2023;622290;04/10/2023;SIDERCEM;28/09/2023;40;57,6;55,1;56,4;
+CLS 5967;01/09/2023;ST11 ;Sottovia - Getto Soletta Concio (Lato Mare) - KM(11+871,15);14/008033;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0704210-U;11/09/2023;CDG-0782530-E;09/10/2023;622290;04/10/2023;SIDERCEM;29/09/2023;40;50,1;51;50,6;
+CLS 6497;31/10/2023;ST11;Sottovia - Getto Fondazione Muro D'Ala N°3;14/010898;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0911983-U;20/11/2023;CDG-0952779-E;04/12/2023;623269;29/11/2023;SIDERCEM;28/11/2023;40;52,9;60,9;56,9;
+CLS 6498;31/10/2023;ST11;Sottovia - Getto Fondazione Muro D'Ala N°1;14/010900;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0911983-U;20/11/2023;CDG-0952779-E;04/12/2023;623269;29/11/2023;SIDERCEM;28/11/2023;40;61,3;63,2;62,3;
+CLS 6521;02/11/2023;ST11;Sottovia - Getto Fondazione Muro D'Ala N°4 - Valle Lato RC - KM(11+871,15);14/010964;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0922720-U;23/11/2023;CDG-0023678-E;11/01/2024;623752;18/12/2023;SIDERCEM;06/12/2023;40;54,3;49,7;52;
+CLS 6566;07/11/2023;ST11;Sottovia - Getto Cordolo per Barriere - KM(11+871,15);14/011049;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0922720-U;23/11/2023;CDG-0023678-E;11/01/2024;623752;18/12/2023;SIDERCEM;06/12/2023;40;60,2;52;56,1;
+CLS 6777;07/12/2023;ST11;Sottovia - Muro D'Ala N°3 - Lato Monte - KM(11+871,15);14/011339;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0999135-U;19/12/2023;CDG-0068049-E;26/01/2024;624146;23/01/2024;SIDERCEM;11/01/2024;40;54,9;59,5;57,2;
+CLS 6849;15/12/2023;ST11;Sottovia - Fondazione Muro D'Ala 2 - KM(11+871);14/0011484;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0016927-U;10/01/2024;CDG-0088211-E;02/02/2024;624282;29/01/2024;SIDERCEM;18/01/2024;40;59,6;67,8;63,7;
+CLS 6988;08/01/2024;ST11;Sottovia - Muro D'Ala N°4 - Lato Mare - KM(11+871,50);14/000070;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0042211-U;17/01/2024;CDG-0122060-E;13/02/2024;624696;08/02/2024;SIDERCEM;07/02/2024;40;69,2;70;69,6;
+CLS 7106;18/01/2024;ST11;Sottovia - Muro D'Ala 1 (Lato Monte) - KM(11+871,5);14/000210;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0097021-U;06/02/2024;CDG-0216277-E;14/03/2024;625014;04/03/2024;SIDERCEM;23/02/2024;40;56;65,9;61;
+CLS 7223;26/01/2024;ST11;Sottovia 4,00x4,00 - Elevazione Muro D'Ala 2 - KM(11+871,15);14/000387;Sinnica_Service_srl_Trebisacce_CS;C40S4D25XA2-1MX - 01-20/2022;CDG-0144304-U;21/02/2024;CDG-0214845-E;13/03/2024;625158;08/03/2024;SIDERCEM;28/02/2024;40;52,8;57,3;55,1;`;
+
+// ---------- util ----------
+const $ = (id) => document.getElementById(id);
+const num = (s) => { if (s == null) return NaN; return parseFloat(String(s).trim().replace(',', '.')); };
+const announce = (msg) => { $('liveRegion').textContent = msg; };
+
+// palette deterministica per mix design (chip colorato)
+const MIX_COLORS = ['#1f3a5f', '#7a4b1f', '#1f7a4d', '#6b2d6b', '#b06a00', '#2d5a6b'];
+const mixColorMap = new Map();
+function colorForMix(mix) {
+  if (!mixColorMap.has(mix)) {
+    mixColorMap.set(mix, MIX_COLORS[mixColorMap.size % MIX_COLORS.length]);
+  }
+  return mixColorMap.get(mix);
+}
+
+// ---------- parsing CSV (separatore ;) ----------
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim().length);
+  const rows = lines.map(line => {
+    // split semplice su ; (i campi del registro non contengono ; interni)
+    return line.split(';');
+  });
+  const header = rows.shift();
+  return rows.map((cells, i) => {
+    const get = (idx) => (cells[idx] || '').trim();
+    const r1 = num(get(16)), r2 = num(get(17));
+    // validità prelievo NTC: |R1-R2| <= 20% del minore
+    const mn = Math.min(r1, r2), mx = Math.max(r1, r2);
+    const scarto = isFinite(mn) && mn > 0 ? (mx - mn) / mn * 100 : NaN;
+    const valido = isFinite(scarto) ? scarto <= 20 : false;
+    return {
+      id: i,
+      verbale: get(0),
+      dataVerbale: get(1),
+      wbs: get(2).trim(),
+      parte: get(3),
+      ddt: get(4),
+      impianto: get(5),
+      mix: get(6),
+      lettera: get(7),
+      certificato: get(11),
+      rck: num(get(15)),
+      r1, r2,
+      rmedio: num(get(18)),
+      scarto,
+      valido,
+      note: get(19),
+    };
+  });
+}
+
+// ---------- stato ----------
+let DATA = [];
+const selected = new Set();
+
+// ---------- navigazione viste ----------
+const VIEWS = { home:'viewHome', cls:'viewCls', steel:'viewSteel', quadro:'viewQuadro' };
+const TITLES = { cls:'Calcestruzzi', steel:'Acciaio', quadro:'Quadro generale' };
+function go(view) {
+  Object.values(VIEWS).forEach(v => $(v).classList.add('hidden'));
+  $(VIEWS[view]).classList.remove('hidden');
+  const isHome = view === 'home';
+  $('crumbSep').style.visibility = isHome ? 'hidden' : 'visible';
+  $('crumbCurrent').textContent = isHome ? '' : TITLES[view];
+  if (!isHome) $('crumbCurrent').focus?.();
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('[data-go]').forEach(b => {
+  b.addEventListener('click', () => go(b.dataset.go));
+});
+$('crumbHome').addEventListener('click', () => go('home'));
+
+// ---------- filtri ----------
+function uniqueSorted(key) {
+  return [...new Set(DATA.map(d => d[key]).filter(v => v !== '' && v != null && !(typeof v==='number'&&isNaN(v))))]
+    .sort((a,b) => (typeof a==='number') ? a-b : String(a).localeCompare(String(b),'it'));
+}
+function populateFilters() {
+  const fill = (sel, vals, allLabel) => {
+    sel.innerHTML = `<option value="">${allLabel}</option>` +
+      vals.map(v => `<option value="${String(v)}">${v}</option>`).join('');
+  };
+  fill($('fWbs'), uniqueSorted('wbs'), 'Tutte');
+  fill($('fParte'), uniqueSorted('parte'), 'Tutte');
+  fill($('fRck'), uniqueSorted('rck'), 'Tutte');
+  fill($('fMix'), uniqueSorted('mix'), 'Tutti');
+}
+function activeFilters() {
+  return {
+    wbs: $('fWbs').value, parte: $('fParte').value,
+    rck: $('fRck').value, mix: $('fMix').value,
+    q: $('fSearch').value.trim().toLowerCase(),
+  };
+}
+function passesFilter(d, f) {
+  if (f.wbs && d.wbs !== f.wbs) return false;
+  if (f.parte && d.parte !== f.parte) return false;
+  if (f.rck && String(d.rck) !== f.rck) return false;
+  if (f.mix && d.mix !== f.mix) return false;
+  if (f.q) {
+    const hay = `${d.verbale} ${d.parte} ${d.certificato} ${d.lettera} ${d.mix} ${d.note}`.toLowerCase();
+    if (!hay.includes(f.q)) return false;
+  }
+  return true;
+}
+
+// ---------- render tabella ----------
+function render() {
+  const f = activeFilters();
+  const rows = DATA.filter(d => passesFilter(d, f));
+  const tb = $('tbody');
+  tb.innerHTML = '';
+  rows.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('aria-selected', selected.has(d.id) ? 'true' : 'false');
+    const esito = d.valido
+      ? `<span class="badge ok"><span class="dot"></span>valido · Δ${d.scarto.toFixed(1)}%</span>`
+      : `<span class="badge bad"><span class="dot"></span>nullo · Δ${isFinite(d.scarto)?d.scarto.toFixed(1):'?'}%</span>`;
+    tr.innerHTML = `
+      <td><input type="checkbox" class="chk" ${selected.has(d.id)?'checked':''}
+            aria-label="Seleziona prelievo ${d.verbale}, ${d.parte}, Rck ${d.rck}"></td>
+      <td class="code">${d.verbale}</td>
+      <td class="num">${d.dataVerbale}</td>
+      <td class="desc">${d.parte}</td>
+      <td><div class="mixcell"><span class="mixchip" style="background:${colorForMix(d.mix)}">${d.mix.split(' - ')[0]}</span></div></td>
+      <td class="num">${isFinite(d.rck)?d.rck:'—'}</td>
+      <td class="num">${isFinite(d.r1)?d.r1.toFixed(1):'—'}</td>
+      <td class="num">${isFinite(d.r2)?d.r2.toFixed(1):'—'}</td>
+      <td class="num"><b>${isFinite(d.rmedio)?d.rmedio.toFixed(1):'—'}</b></td>
+      <td>${esito}</td>
+      <td>${d.lettera?`<button class="doclink" data-doc="lettera" data-row="${d.id}" aria-label="Apri lettera ${d.lettera}"><span class="ic">↗</span>${d.lettera}</button>`:'—'}</td>
+      <td>${d.certificato?`<button class="doclink" data-doc="certificato" data-row="${d.id}" aria-label="Apri certificato ${d.certificato}"><span class="ic">↗</span>${d.certificato}</button>`:'—'}</td>
+    `;
+    const chk = tr.querySelector('.chk');
+    chk.addEventListener('change', () => toggleSel(d.id, chk.checked));
+    tb.appendChild(tr);
+  });
+
+  // doc link handlers (prototipo: spiega il meccanismo)
+  tb.querySelectorAll('.doclink').forEach(b => {
+    b.addEventListener('click', () => {
+      const d = DATA[+b.dataset.row];
+      const code = b.dataset.doc === 'lettera' ? d.lettera : d.certificato;
+      announce(`Apertura documento ${code}`);
+      alert(`Documento "${code}"\n\nNella versione finale: trascini qui il PDF (drag & drop) o lo selezioni dalla cartella di lavoro, e Kerios lo apre. Nessun vincolo di percorso o di nome file.`);
+    });
+  });
+
+  // empty state
+  const has = DATA.length > 0;
+  $('emptyState').hidden = has;
+  $('tablewrap').hidden = !has;
+  $('filters').hidden = !has;
+  $('selbar').hidden = !has;
+}
+
+// ---------- selezione ----------
+function toggleSel(id, on) {
+  if (on) selected.add(id); else selected.delete(id);
+  updateSelbar();
+  const tr = [...$('tbody').querySelectorAll('tr')].find(tr =>
+    tr.querySelector(`.chk[aria-label*="${DATA[id].verbale},"]`));
+  // ricalcolo aria-selected via render leggero
+  render();
+}
+function updateSelbar() {
+  $('selCount').textContent = selected.size;
+  const mixes = new Set([...selected].map(id => DATA[id].mix));
+  const mixed = mixes.size > 1;
+  $('mixWarn').classList.toggle('hidden', !mixed);
+  $('btnGenerate').disabled = selected.size < 3; // Tipo A: min 3 prelievi
+  if (selected.size > 0 && selected.size < 3) {
+    announce(`${selected.size} prelievi selezionati. Servono almeno 3 prelievi per un controllo Tipo A.`);
+  }
+}
+
+// ---------- azioni ----------
+$('btnDemo').addEventListener('click', () => {
+  DATA = parseCSV(DEMO_CSV);
+  selected.clear();
+  mixColorMap.clear();
+  populateFilters();
+  render();
+  updateSelbar();
+  $('ctxLabel').textContent = 'esempio: cantiere ST11';
+  announce(`Caricati ${DATA.length} prelievi di esempio.`);
+});
+
+$('btnLoad').addEventListener('click', () => $('fileInput').click());
+$('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    // gestione encoding: provo a decodificare come UTF-8, fallback latin1 via TextDecoder
+    DATA = parseCSV(reader.result);
+    selected.clear(); mixColorMap.clear();
+    populateFilters(); render(); updateSelbar();
+    $('ctxLabel').textContent = file.name;
+    announce(`Caricati ${DATA.length} prelievi da ${file.name}.`);
+  };
+  reader.readAsText(file, 'windows-1252'); // registri Excel italiani
+});
+
+['fWbs','fParte','fRck','fMix'].forEach(id => $(id).addEventListener('change', render));
+$('fSearch').addEventListener('input', render);
+$('btnReset').addEventListener('click', () => {
+  ['fWbs','fParte','fRck','fMix'].forEach(id => $(id).value = '');
+  $('fSearch').value = '';
+  render();
+  announce('Filtri azzerati.');
+});
+$('btnClearSel').addEventListener('click', () => {
+  selected.clear(); updateSelbar(); render();
+  announce('Selezione svuotata.');
+});
+$('btnGenerate').addEventListener('click', () => {
+  const items = [...selected].map(id => DATA[id]);
+  const result = controlloTipoA(items);
+  alert(result);
+});
+
+// ---------- engine NTC (prototipo) — Controllo Tipo A ----------
+function controlloTipoA(items) {
+  const n = items.length;
+  const rck = items[0].rck;
+  const Rs = items.map(d => d.rmedio);
+  const Rcm = Rs.reduce((a,b)=>a+b,0)/n;
+  const Rcmin = Math.min(...Rs);
+  // NTC Tipo A (3 <= n < 15): Rcm >= Rck+3.5  e  Rc,min >= Rck-3.5
+  const d1 = Rcm >= rck + 3.5;
+  const d2 = Rcmin >= rck - 3.5;
+  const ok = d1 && d2;
+  return [
+    `CONTROLLO DI ACCETTAZIONE — TIPO A  (anteprima engine)`,
+    `Prelievi: ${n}   |   Rck di progetto: ${rck} N/mmq`,
+    ``,
+    `Rcm (media resistenze di prelievo) = ${Rcm.toFixed(2)} N/mmq`,
+    `Rc,min                              = ${Rcmin.toFixed(2)} N/mmq`,
+    ``,
+    `Disug. 1:  Rcm ≥ Rck+3.5  →  ${Rcm.toFixed(2)} ≥ ${(rck+3.5).toFixed(1)}  →  ${d1?'OK':'NO'}`,
+    `Disug. 2:  Rc,min ≥ Rck-3.5  →  ${Rcmin.toFixed(2)} ≥ ${(rck-3.5).toFixed(1)}  →  ${d2?'OK':'NO'}`,
+    ``,
+    `ESITO: ${ok ? '✓ CONFORME' : '✗ NON CONFORME'}`,
+    n >= 15 ? '\n(Nota: con ≥15 prelievi si applica anche/invece il Tipo B statistico.)' : '',
+  ].join('\n');
+}
+
+// avvio su home
+go('home');
+</script>
+</body>
+</html>

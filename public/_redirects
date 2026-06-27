@@ -1,0 +1,3 @@
+# Cloudflare Pages — fallback SPA: ogni rotta sconosciuta serve index.html (200).
+# Permette router con path veri (BrowserRouter) senza HashRouter. Vedi architettura.md.
+/*    /index.html   200
