@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import type { Prelievo, Soglie, TipoControllo } from '../../core/index.ts';
-import { calcolaControllo, avvisiGruppo, resistenzaPrelievo } from '../../domain/index.ts';
+import {
+  calcolaControllo,
+  avvisiGruppo,
+  resistenzaPrelievo,
+  verificaOmogeneita,
+} from '../../domain/index.ts';
 import { formattaNumeroIt } from '../../io/formato.ts';
 import { EsitoBadge } from '../comuni/EsitoBadge.tsx';
 import styles from './GruppoControllo.module.css';
@@ -33,10 +38,14 @@ export function GruppoControllo(props: Props) {
     [prelievi, soglie, tipoForzato],
   );
   const r = esito.risultato;
+  const omog = useMemo(() => verificaOmogeneita(prelievi), [prelievi]);
   const avvisi = useMemo(() => {
     const comp = avvisiGruppo(prelievi, soglie);
-    return [...new Set([...comp, ...r.avvisi])];
+    // l'omogeneità ha un banner FORTE dedicato → fuori dalla lista avvisi normali
+    return [...new Set([...comp, ...r.avvisi])].filter((a) => !/omogen/i.test(a));
   }, [prelievi, soglie, r.avvisi]);
+  // "Forza e salva" se ci sono avvisi normali OPPURE la miscela non è omogenea.
+  const richiedeForza = avvisi.length > 0 || !omog.omogenea;
 
   const tipoDiverso = tipoForzato != null && tipoForzato !== esito.suggerimento.tipo;
   const vuoto = prelievi.length === 0;
@@ -183,6 +192,13 @@ export function GruppoControllo(props: Props) {
             </li>
           </ul>
 
+          {/* Banner FORTE: miscela non omogenea (role=alert, assertivo, no focus steal). */}
+          {!omog.omogenea && (
+            <p className={styles.alertForte} role="alert">
+              <span aria-hidden="true">⚠</span> {omog.messaggio}
+            </p>
+          )}
+
           {avvisi.length > 0 && (
             <ul className={styles.avvisi} aria-label="Avvisi del controllo">
               {avvisi.map((a) => (
@@ -194,10 +210,10 @@ export function GruppoControllo(props: Props) {
           <div className={styles.azioni}>
             <button
               type="button"
-              className={avvisi.length > 0 ? styles.forza : styles.salva}
-              onClick={() => props.onSalva(avvisi.length > 0)}
+              className={richiedeForza ? styles.forza : styles.salva}
+              onClick={() => props.onSalva(richiedeForza)}
             >
-              {avvisi.length > 0 ? 'Forza e salva' : 'Salva controllo'}
+              {richiedeForza ? 'Forza e salva' : 'Salva controllo'}
             </button>
           </div>
         </div>

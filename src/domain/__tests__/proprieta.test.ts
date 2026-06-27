@@ -299,12 +299,42 @@ describe('Proprietà — Raggruppamento (§1.4-quater)', () => {
       }),
     );
 
-  it('G1+G3 — AUTO conserva i refertati nell’ordine del registro (niente perso/inventato)', () => {
+  it('G1 — AUTO conserva l’insieme dei refertati (niente perso/inventato)', () => {
     fc.assert(
       fc.property(genLista, (lista) => {
         const refIds = lista.filter(refertato).map((p) => p.id);
-        const auto = raggruppa(lista, 'auto');
-        expect(auto.flatMap((g) => g.prelieviIds)).toEqual(refIds);
+        const auto = raggruppa(lista, 'auto').flatMap((g) => g.prelieviIds);
+        expect(auto.length).toBe(refIds.length);
+        expect(new Set(auto)).toEqual(new Set(refIds));
+      }),
+      RUNS,
+    );
+  });
+
+  it('G-mix — AUTO: ogni gruppo contiene UN SOLO mix (miscela omogenea, §11.2.5)', () => {
+    fc.assert(
+      fc.property(genLista, (lista) => {
+        const mixOf = new Map(lista.map((p) => [p.id, p.mix]));
+        for (const g of raggruppa(lista, 'auto')) {
+          const mixGruppo = new Set(g.prelieviIds.map((id) => mixOf.get(id)));
+          expect(mixGruppo.size).toBeLessThanOrEqual(1);
+        }
+      }),
+      RUNS,
+    );
+  });
+
+  it('G3 — AUTO: dentro ogni mix l’ordine del registro è preservato', () => {
+    fc.assert(
+      fc.property(genLista, (lista) => {
+        const refert = lista.filter(refertato);
+        const mixOf = new Map(lista.map((p) => [p.id, p.mix]));
+        const auto = raggruppa(lista, 'auto').flatMap((g) => g.prelieviIds);
+        for (const mix of new Set(refert.map((p) => p.mix))) {
+          const ordineRegistro = refert.filter((p) => p.mix === mix).map((p) => p.id);
+          const ordineAuto = auto.filter((id) => mixOf.get(id) === mix);
+          expect(ordineAuto).toEqual(ordineRegistro);
+        }
       }),
       RUNS,
     );

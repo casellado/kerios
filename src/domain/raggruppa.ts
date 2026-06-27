@@ -24,6 +24,18 @@ function terzine<T>(arr: readonly T[]): T[][] {
   return out;
 }
 
+/** Partiziona per chiave preservando l'ordine di prima comparsa (e l'ordine interno). */
+function partiziona<T>(arr: readonly T[], chiave: (x: T) => string): T[][] {
+  const buckets = new Map<string, T[]>();
+  for (const x of arr) {
+    const k = chiave(x);
+    const b = buckets.get(k);
+    if (b) b.push(x);
+    else buckets.set(k, [x]);
+  }
+  return [...buckets.values()];
+}
+
 /** Avvisi di COMPOSIZIONE del gruppo (non bloccanti). Il controllo aggiunge n<3/CV. */
 export function avvisiGruppo(
   prelievi: readonly Prelievo[],
@@ -77,21 +89,53 @@ export function raggruppa(
   if (modo === 'manuale') return [];
 
   if (modo === 'auto') {
-    return terzine(refert).map((g) => protosta(g, soglie));
+    // MISCELA OMOGENEA (NTC §11.2.5): si raggruppa SOLO entro lo stesso mix design
+    // (che codifica resistenza+esposizione+consistenza). Prima partiziona per mix,
+    // poi terzine consecutive nell'ordine del registro DENTRO ciascun mix.
+    const out: ProtostaControllo[] = [];
+    for (const arr of partiziona(refert, (p) => p.mix)) {
+      for (const g of terzine(arr)) out.push(protosta(g, soglie));
+    }
+    return out;
   }
 
-  // 'assistito': bucket per mix||parte, ordinati per data, poi terzine.
-  const buckets = new Map<string, Prelievo[]>();
-  for (const p of refert) {
-    const k = `${p.mix}||${p.parte}`;
-    const arr = buckets.get(k);
-    if (arr) arr.push(p);
-    else buckets.set(k, [p]);
-  }
+  // 'assistito': bucket primario il MIX, poi parte d'opera; ordina per data, poi terzine.
   const out: ProtostaControllo[] = [];
-  for (const arr of buckets.values()) {
+  for (const arr of partiziona(refert, (p) => `${p.mix}||${p.parte}`)) {
     const ordinati = [...arr].sort((a, b) => chiaveData(a) - chiaveData(b));
     for (const g of terzine(ordinati)) out.push(protosta(g, soglie));
   }
   return out;
+}
+
+/** Esito della verifica di MISCELA OMOGENEA su un gruppo (per il banner FORTE). */
+export interface AvvisoOmogeneita {
+  omogenea: boolean;
+  /** true quando NON è omogenea: avviso forte (mix diversi). */
+  forte: boolean;
+  /** true se differisce anche l'Rck (caso più grave). */
+  rckDiversi: boolean;
+  messaggio: string;
+}
+
+/**
+ * Verifica che il gruppo sia una MISCELA OMOGENEA ai sensi NTC §11.2.5: stesso
+ * MIX DESIGN (che racchiude resistenza + esposizione + consistenza). Mix diversi
+ * → avviso FORTE (non bloccante, superabile con `forzato`). Distingue "solo mix
+ * diverso" da "Rck e mix diversi" (più grave).
+ */
+export function verificaOmogeneita(prelievi: readonly Prelievo[]): AvvisoOmogeneita {
+  const mixDistinti = new Set(prelievi.map((p) => p.mix)).size;
+  const rckDistinti = new Set(prelievi.map((p) => p.rck)).size;
+  if (mixDistinti <= 1) {
+    return { omogenea: true, forte: false, rckDiversi: false, messaggio: '' };
+  }
+  const rckDiversi = rckDistinti > 1;
+  const cosa = rckDiversi ? 'Rck e mix diversi' : 'Miscele (mix) diverse';
+  return {
+    omogenea: false,
+    forte: true,
+    rckDiversi,
+    messaggio: `${cosa}: non è una miscela omogenea ai sensi NTC §11.2.5. Confermi comunque?`,
+  };
 }

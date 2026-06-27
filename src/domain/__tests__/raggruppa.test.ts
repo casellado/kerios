@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Prelievo } from '../../core/index.ts';
-import { raggruppa, avvisiGruppo, calcolaControllo } from '../index.ts';
+import { raggruppa, avvisiGruppo, calcolaControllo, verificaOmogeneita } from '../index.ts';
 
 let seq = 0;
 function pref(over: Partial<Prelievo> = {}): Prelievo {
@@ -56,6 +56,44 @@ describe('raggruppa — strategia AUTO (terzine consecutive)', () => {
     const c = pref({ verbale: 'CLS/300' });
     const g = raggruppa([a, b, c], 'auto');
     expect(g[0].prelieviIds).toEqual([a.id, b.id, c.id]);
+  });
+});
+
+describe('raggruppa — AUTO raggruppa per MISCELA OMOGENEA (mix)', () => {
+  it('non mette mai mix diversi nello stesso gruppo', () => {
+    const a = pref({ mix: 'M-15', rck: 15 });
+    const b = pref({ mix: 'M-40', rck: 40 });
+    const c = pref({ mix: 'M-40', rck: 40 });
+    const d = pref({ mix: 'M-40', rck: 40 });
+    const g = raggruppa([a, b, c, d], 'auto');
+    // M-15 → [a] ; M-40 → [b,c,d]
+    expect(g).toHaveLength(2);
+    const gA = g.find((x) => x.prelieviIds.includes(a.id))!;
+    expect(gA.prelieviIds).toEqual([a.id]);
+    const gB = g.find((x) => x.prelieviIds.includes(b.id))!;
+    expect(gB.prelieviIds).toEqual([b.id, c.id, d.id]);
+  });
+});
+
+describe('verificaOmogeneita (banner FORTE §11.2.5)', () => {
+  it('stesso mix → omogenea, nessun avviso', () => {
+    const o = verificaOmogeneita([pref({ mix: 'X' }), pref({ mix: 'X' })]);
+    expect(o.omogenea).toBe(true);
+    expect(o.forte).toBe(false);
+  });
+  it('mix diversi, stesso Rck → forte, messaggio "mix" (non "Rck e mix")', () => {
+    const o = verificaOmogeneita([pref({ mix: 'X', rck: 40 }), pref({ mix: 'Y', rck: 40 })]);
+    expect(o.forte).toBe(true);
+    expect(o.rckDiversi).toBe(false);
+    expect(o.messaggio).toContain('mix');
+    expect(o.messaggio).not.toContain('Rck e mix');
+    expect(o.messaggio).toContain('§11.2.5');
+  });
+  it('mix E Rck diversi → forte e più grave ("Rck e mix")', () => {
+    const o = verificaOmogeneita([pref({ mix: 'X', rck: 15 }), pref({ mix: 'Y', rck: 40 })]);
+    expect(o.forte).toBe(true);
+    expect(o.rckDiversi).toBe(true);
+    expect(o.messaggio).toContain('Rck e mix');
   });
 });
 

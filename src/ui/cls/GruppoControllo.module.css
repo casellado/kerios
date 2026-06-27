@@ -186,6 +186,19 @@
   color: var(--warn);
 }
 
+/* Avviso FORTE (miscela non omogenea): più marcato degli avvisi normali. */
+.alertForte {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--bad-bg);
+  color: var(--bad);
+  border: 2px solid color-mix(in srgb, var(--bad) 55%, transparent);
+  border-left-width: 5px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
 .azioni {
   display: flex;
   gap: 10px;
