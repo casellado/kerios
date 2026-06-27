@@ -1,0 +1,23 @@
+{
+  "_nota": "Soglie esterne lette da Kerios. I valori NTC di legge (3,5 / 1,48 / 0,15 / 0,30 / 20%) NON vanno indeboliti. Modificabile senza ricompilare; chiavi assenti restano ai default del codice.",
+  "cls": {
+    "validitaPrelievo": { "scartoMaxPct": 20 },
+    "tipoA": { "deltaRcm": 3.5, "deltaRcmin": 3.5 },
+    "tipoB": { "fattoreS": 1.48, "deltaRcmin": 3.5, "cvAvviso": 0.15, "cvRifiuto": 0.3 },
+    "volumeTipoBObbligatorio": 1500,
+    "nPrelieviTipoB": 15,
+    "massaVolumica": { "min": 2200, "max": 2500 },
+    "volumeTipoA": { "maxM3": 300 },
+    "trasporto": { "maxMinuti": 90 },
+    "stagionatura": { "canonicoGg": 28, "limiteGg": 45 },
+    "slumpClassi": {
+      "S1": [10, 40],
+      "S2": [50, 90],
+      "S3": [100, 150],
+      "S4": [160, 210],
+      "S5": [220, 999]
+    },
+    "preliminare": { "margineGiallo": 3.5 }
+  },
+  "decimaliDisplay": 2
+}

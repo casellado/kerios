@@ -26,6 +26,8 @@ export interface SoglieCls {
   trasporto: { maxMinuti: number };
   stagionatura: { canonicoGg: number; limiteGg: number };
   slumpClassi: Record<string, [number, number]>;
+  /** semaforo PRELIMINARE: banda gialla = Rc sotto Rck ma entro questo margine. */
+  preliminare: { margineGiallo: number };
 }
 
 export interface Soglie {
@@ -54,6 +56,7 @@ export const SOGLIE_DEFAULT: Soglie = {
       S4: [160, 210],
       S5: [220, 999],
     },
+    preliminare: { margineGiallo: 3.5 },
   },
   decimaliDisplay: 2,
 };

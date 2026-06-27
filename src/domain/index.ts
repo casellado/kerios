@@ -3,4 +3,5 @@
  * Le verifiche vivono qui; la UI non calcola nulla. Niente React/DOM/io.
  */
 export * from './stats.ts';
+export * from './date.ts';
 export * from './cls.ts';

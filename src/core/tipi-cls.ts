@@ -26,6 +26,9 @@ export interface Prelievo {
   parte: string;
   rck: number;
   mix: string;
+  ddt?: string; // numero DDT del registro (il FILE/allegato è M5)
+  impianto?: string; // fornitore/impianto di betonaggio
+  note?: string;
   massaVolumica?: number; // kg/m³ (UNI EN 12390-7), colonna prima di Rck
   volumeGetto?: number; // m³ (avviso limite 300 m³)
   slump?: number; // mm, consistenza al getto
@@ -53,6 +56,16 @@ export interface Prelievo {
 export interface EsitoValidita {
   scartoPct: number; // arrotondato a 2 decimali (come il documento del PO)
   valido: boolean;
+}
+
+/** Semaforo PRELIMINARE sul singolo prelievo (§1.4-septies). NON è il verdetto NTC. */
+export type SemaforoPrelievo = 'conforme' | 'da_verificare' | 'fuori_soglia';
+
+export interface EsitoPreliminare {
+  stato: SemaforoPrelievo;
+  /** etichetta breve testuale (mai solo colore). */
+  etichetta: string;
+  note: string[];
 }
 
 export type TipoControllo = 'A' | 'B';

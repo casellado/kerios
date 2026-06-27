@@ -14,12 +14,14 @@ import {
   type Prelievo,
   type StatoPrelievo,
   type EsitoValidita,
+  type EsitoPreliminare,
   type RisultatoControllo,
   type Disuguaglianza,
   type Soglie,
   SOGLIE_DEFAULT,
 } from '../core/index.ts';
 import { media, scartoQuadraticoMedio, arrotonda } from './stats.ts';
+import { giorniTra } from './date.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ciclo di vita
@@ -73,6 +75,103 @@ export function validitaPrelievo(
   if (rmin <= 0) return { scartoPct: Infinity, valido: false };
   const scartoPct = arrotonda(((rmax - rmin) / rmin) * 100, 2);
   return { scartoPct, valido: scartoPct <= soglie.cls.validitaPrelievo.scartoMaxPct };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Semaforo PRELIMINARE sul singolo prelievo (§1.4-septies)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Esito PRELIMINARE (indicatore di qualità, NON il verdetto NTC di gruppo).
+ * Restituisce null se il prelievo non è ancora refertato (niente R1/R2): in quel
+ * caso la riga mostra lo STATO del ciclo di vita, non il semaforo.
+ */
+export function esitoPreliminare(
+  p: Prelievo,
+  soglie: Soglie = SOGLIE_DEFAULT,
+): EsitoPreliminare | null {
+  if (p.r1 == null || p.r2 == null) return null;
+  const dec = soglie.decimaliDisplay;
+  const v = validitaPrelievo(p.r1, p.r2, soglie);
+  const rc = (p.r1 + p.r2) / 2;
+  const rcR = arrotonda(rc, dec);
+
+  if (!v.valido) {
+    return {
+      stato: 'fuori_soglia',
+      etichetta: 'Fuori soglia',
+      note: [
+        `Prelievo nullo: scarto ${v.scartoPct}% > ${soglie.cls.validitaPrelievo.scartoMaxPct}%.`,
+      ],
+    };
+  }
+  if (rc >= p.rck) {
+    return { stato: 'conforme', etichetta: 'Conforme', note: [] };
+  }
+  if (rc >= p.rck - soglie.cls.preliminare.margineGiallo) {
+    return {
+      stato: 'da_verificare',
+      etichetta: 'Da verificare',
+      note: [
+        `Rc ${rcR} sotto Rck ${p.rck} ma entro ${soglie.cls.preliminare.margineGiallo} N/mm².`,
+      ],
+    };
+  }
+  return {
+    stato: 'fuori_soglia',
+    etichetta: 'Fuori soglia',
+    note: [`Rc ${rcR} nettamente sotto Rck ${p.rck}.`],
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vista di riga (composizione pura per la tabella — la UI NON calcola)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface VistaPrelievo {
+  prelievo: Prelievo;
+  stato: StatoPrelievo;
+  rc: number | undefined; // R medio (solo se refertato)
+  validita: EsitoValidita | undefined;
+  preliminare: EsitoPreliminare | null;
+  stagionaturaGg: number | null;
+  avvisoStagionatura: string | null;
+}
+
+/** Tutto ciò che serve a una riga di tabella, calcolato dal dominio. */
+export function descriviPrelievo(p: Prelievo, soglie: Soglie = SOGLIE_DEFAULT): VistaPrelievo {
+  const rc = resistenzaPrelievo(p);
+  const stag = stagionatura(p, soglie);
+  return {
+    prelievo: p,
+    stato: statoPrelievo(p),
+    rc,
+    validita: p.r1 != null && p.r2 != null ? validitaPrelievo(p.r1, p.r2, soglie) : undefined,
+    preliminare: esitoPreliminare(p, soglie),
+    stagionaturaGg: stag.giorni,
+    avvisoStagionatura: stag.avviso,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fasi temporali del cubetto (§1.4-sexies)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface EsitoStagionatura {
+  giorni: number | null; // dataProva − data (getto)
+  avviso: string | null; // <28 (anticipata) o >45 (oltre il limite → carotaggi)
+}
+
+/** Giorni di stagionatura (dataProva − data) + avviso 28/45 gg. */
+export function stagionatura(p: Prelievo, soglie: Soglie = SOGLIE_DEFAULT): EsitoStagionatura {
+  const giorni = giorniTra(p.data, p.dataProva);
+  if (giorni == null) return { giorni: null, avviso: null };
+  const { canonicoGg, limiteGg } = soglie.cls.stagionatura;
+  let avviso: string | null = null;
+  if (giorni < canonicoGg) avviso = `Prova anticipata: ${giorni} gg < ${canonicoGg} gg.`;
+  else if (giorni > limiteGg)
+    avviso = `Oltre ${limiteGg} gg (${giorni} gg): valutare prove in opera (carotaggi).`;
+  return { giorni, avviso };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
