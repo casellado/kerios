@@ -106,9 +106,30 @@
   border-top: 1px solid var(--line);
   padding-top: 16px;
 }
+.salvTesta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 .salvTitolo {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 15px;
+}
+.svuota {
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.svuota:hover {
+  border-color: var(--bad);
+  color: var(--bad);
 }
 .salvLista {
   list-style: none;

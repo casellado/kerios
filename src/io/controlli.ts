@@ -21,3 +21,11 @@ export function caricaControlliWbs(wbs: string): Promise<ControlloSalvato[]> {
 export function eliminaControllo(id: string): Promise<void> {
   return db.controlliCls.delete(id);
 }
+
+/**
+ * Svuota TUTTI i controlli salvati (azione esplicita dell'utente, con conferma in
+ * UI). Tocca SOLO `controlliCls` — i prelievi importati NON vengono toccati.
+ */
+export function svuotaControlli(): Promise<void> {
+  return db.controlliCls.clear();
+}

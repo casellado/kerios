@@ -61,8 +61,19 @@ export function controlloCompleto(r: RisultatoControllo, soglie: Soglie = SOGLIE
 }
 
 export interface OpzioniSnapshot extends OpzioniCalcolo {
-  id: string;
   generato: string; // ISO (passato da fuori: il dominio non legge l'orologio)
+}
+
+/**
+ * CHIAVE per CONTENUTO di un controllo: deterministica e indipendente dall'ordine
+ * dei prelievi (join degli id ORDINATI). Stesso insieme di prelievi → stessa
+ * chiave, anche tra sessioni o dopo una rigenerazione della proposta. Così il
+ * salvataggio è idempotente per CONTENUTO, non per un uid di sessione (fix
+ * "Controlli salvati" doppi). Niente hashing/dipendenze: la chiave è l'insieme
+ * stesso (esatta, senza rischio di collisione).
+ */
+export function chiaveControllo(prelieviIds: readonly string[]): string {
+  return [...prelieviIds].sort().join('|');
 }
 
 /**
@@ -70,6 +81,7 @@ export interface OpzioniSnapshot extends OpzioniCalcolo {
  * VALORI calcolati (non riferimenti): `prelieviIds` è una COPIA e tutti i campi
  * sono primitivi del controllo. Un gruppo incompleto (n sotto il minimo) ha
  * esito 'incompleto', mai 'conforme'/'non_conforme' (P2 del collaudo).
+ * La CHIAVE (`id`) è derivata dai prelievi → idempotenza per contenuto.
  */
 export function costruisciControlloSalvato(
   prelievi: readonly Prelievo[],
@@ -78,13 +90,14 @@ export function costruisciControlloSalvato(
   const soglie = opts.soglie ?? SOGLIE_DEFAULT;
   const { risultato: r } = calcolaControllo(prelievi, opts);
   const completo = controlloCompleto(r, soglie);
+  const prelieviIds = prelievi.map((p) => p.id); // SNAPSHOT (copia), non il riferimento di stato
 
   const c: ControlloSalvato = {
-    id: opts.id,
+    id: chiaveControllo(prelieviIds),
     wbs: prelievi[0]?.wbs ?? '',
     tipo: r.tipo,
     rck: r.rck,
-    prelieviIds: prelievi.map((p) => p.id), // SNAPSHOT (copia), non il riferimento di stato
+    prelieviIds,
     esito: !completo ? 'incompleto' : r.conforme ? 'conforme' : 'non_conforme',
     n: r.n,
     forzato: opts.forzato ?? false,

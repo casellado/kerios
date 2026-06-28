@@ -11,7 +11,12 @@ import {
   costruisciControlloSalvato,
   guardrailPerMix,
 } from '../../domain/index.ts';
-import { caricaTuttiControlli, salvaControllo, eliminaControllo } from '../../io/controlli.ts';
+import {
+  caricaTuttiControlli,
+  salvaControllo,
+  eliminaControllo,
+  svuotaControlli,
+} from '../../io/controlli.ts';
 import { formattaNumeroIt } from '../../io/formato.ts';
 import { useStore } from '../../stato/store.ts';
 import { GruppoControllo } from './GruppoControllo.tsx';
@@ -89,13 +94,13 @@ export function ControlliView() {
   const risolvi = (ids: string[]): Prelievo[] =>
     ids.map((id) => byId.get(id)).filter((p): p is Prelievo => p != null);
 
-  // idempotente: il controllo salvato usa l'ID STABILE del gruppo → ri-salvare
-  // lo stesso gruppo AGGIORNA la voce, non ne crea una nuova (fix P3).
+  // idempotente PER CONTENUTO: la chiave del controllo salvato deriva dai suoi
+  // prelievi (non da un uid di sessione) → ri-salvare lo stesso insieme di
+  // prelievi AGGIORNA la voce, anche dopo una rigenerazione o in altra sessione.
   async function salva(g: GruppoState) {
     const pr = risolvi(g.prelieviIds);
     if (pr.length === 0) return;
     const c = costruisciControlloSalvato(pr, {
-      id: g.id,
       generato: new Date().toISOString(),
       soglie,
       ...(g.tipo ? { tipo: g.tipo } : {}),
@@ -106,6 +111,18 @@ export function ControlliView() {
 
   async function elimina(id: string) {
     await eliminaControllo(id);
+    setSalvati(await caricaTuttiControlli());
+  }
+
+  async function svuota() {
+    if (
+      !window.confirm(
+        'Svuotare tutti i controlli salvati? I prelievi importati non vengono toccati.',
+      )
+    ) {
+      return;
+    }
+    await svuotaControlli();
     setSalvati(await caricaTuttiControlli());
   }
 
@@ -203,9 +220,14 @@ export function ControlliView() {
 
       {salvati.length > 0 && (
         <section className={styles.salvati} aria-labelledby="salv-titolo">
-          <h3 id="salv-titolo" className={styles.salvTitolo}>
-            Controlli salvati ({salvati.length})
-          </h3>
+          <div className={styles.salvTesta}>
+            <h3 id="salv-titolo" className={styles.salvTitolo}>
+              Controlli salvati ({salvati.length})
+            </h3>
+            <button type="button" className={styles.svuota} onClick={() => void svuota()}>
+              Svuota controlli salvati
+            </button>
+          </div>
           <ul className={styles.salvLista}>
             {salvati.map((c) => (
               <li key={c.id} className={styles.salvItem}>
@@ -224,7 +246,7 @@ export function ControlliView() {
                   {c.rckEffettiva != null
                     ? `Rck eff ${formattaNumeroIt(c.rckEffettiva, 2)} · `
                     : ''}
-                  {c.n} prelievi · {c.wbs}
+                  {c.n ?? c.prelieviIds.length} prelievi · {c.wbs}
                 </span>
                 <button
                   type="button"
