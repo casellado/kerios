@@ -94,6 +94,13 @@ export function GruppoControllo(props: Props) {
 
   const mancanti = Math.max(0, soglie.cls.nPrelieviTipoAMin - r.n);
 
+  // Resistenza minima del gruppo: serve a evidenziare il prelievo che "tiene
+  // basso" un controllo non conforme (l'elemento vincolante, già calcolato).
+  const resistenze = prelievi
+    .map((p) => resistenzaPrelievo(p))
+    .filter((x): x is number => x != null);
+  const rcMin = resistenze.length ? Math.min(...resistenze) : null;
+
   // Celle Rmin/Rm/Rck eff UNITE sulla terzina (rowSpan), come le merge M/N/O
   // dell'ST36: i valori del controllo (dal calcolo esistente, engine intatto)
   // appaiono una sola volta per gruppo, allineati ai suoi prelievi.
@@ -123,8 +130,12 @@ export function GruppoControllo(props: Props) {
     </td>
   );
 
+  // Accento CONFORMITÀ della card (linguaggio diverso dai colori-DOCUMENTO sui
+  // numeri-link): verde=conforme, rosso=non conforme, neutro=aperto/incompleto.
+  const accento = !completo ? '' : r.conforme ? styles.cardOk : styles.cardNo;
+
   return (
-    <article className={styles.card} aria-label={`Controllo ${indice}`}>
+    <article className={`${styles.card} ${accento}`} aria-label={`Controllo ${indice}`}>
       <header className={styles.testa}>
         <h3 className={styles.titolo}>Controllo {indice}</h3>
         {vuoto ? null : completo ? (
@@ -184,7 +195,9 @@ export function GruppoControllo(props: Props) {
               <th aria-hidden="true" />
             </tr>
             <tr>
-              <th scope="col">Data</th>
+              <th scope="col" className={styles.fissaCol}>
+                Data
+              </th>
               <th scope="col" className={styles.num}>
                 Rck
               </th>
@@ -220,9 +233,23 @@ export function GruppoControllo(props: Props) {
           <tbody>
             {prelievi.map((p, i) => {
               const vp = descriviPrelievo(p, soglie);
+              const rc = resistenzaPrelievo(p);
+              // ELEMENTO PROBLEMATICO (semaforo CONFORMITÀ, non documento):
+              // prelievo nullo (scarto R1/R2 > soglia), R nettamente sotto Rck,
+              // o il prelievo con R minima quando il controllo è non conforme.
+              const nullo = vp.validita?.valido === false;
+              const problematico =
+                nullo ||
+                vp.preliminare?.stato === 'fuori_soglia' ||
+                (completo && !r.conforme && rc != null && rc === rcMin);
+              const motivo = nullo
+                ? `Prelievo nullo: scarto R1/R2 ${vp.validita?.scartoPct}% oltre soglia.`
+                : vp.preliminare?.stato === 'fuori_soglia'
+                  ? (vp.preliminare.note[0] ?? 'Resistenza fuori soglia.')
+                  : 'Resistenza minima del controllo.';
               return (
-                <tr key={p.id}>
-                  <td>{p.data}</td>
+                <tr key={p.id} className={problematico ? styles.rigaProblema : undefined}>
+                  <td className={styles.fissaCol}>{p.data}</td>
                   <td className={styles.num}>{fmt(p.rck)}</td>
                   <th scope="row" className={styles.code}>
                     <LinkDocumento
@@ -248,7 +275,15 @@ export function GruppoControllo(props: Props) {
                   <td className={styles.num}>{vp.stagionaturaGg ?? '—'}</td>
                   <td className={styles.num}>{fmt(p.r1)}</td>
                   <td className={styles.num}>{fmt(p.r2)}</td>
-                  <td className={styles.num}>{fmt(resistenzaPrelievo(p))}</td>
+                  <td className={styles.num}>
+                    {fmt(rc)}
+                    {problematico ? (
+                      <span className={styles.flag} title={motivo}>
+                        {' '}
+                        ⚠<span className={styles.srOnly}> {motivo}</span>
+                      </span>
+                    ) : null}
+                  </td>
                   {i === 0 && controlloCelle}
                   <td className={styles.num}>
                     <button

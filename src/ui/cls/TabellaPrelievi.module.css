@@ -72,23 +72,19 @@
   box-sizing: border-box;
 }
 .tabella {
-  min-width: 100%;
-  border-collapse: collapse;
+  composes: robusta from '../comuni/tabella.module.css';
   font-size: 13px;
   background: var(--surface);
 }
 
-/* Colonna «Verbale» congelata a sinistra: resta visibile scorrendo a destra.
-   Header già sticky-top; questa cella d'angolo è sticky su entrambi gli assi. */
+/* Colonna «Verbale» congelata a sinistra (soluzione condivisa): resta visibile
+   scorrendo a destra. Header già sticky-top; la cella d'angolo è sticky su
+   entrambi gli assi → z-index più alto di tutti. */
 .sticky {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--surface);
-  border-right: 1px solid var(--line);
+  composes: fissa from '../comuni/tabella.module.css';
 }
 .tabella thead th.sticky {
-  z-index: 3;
+  z-index: 4;
   background: var(--paper);
 }
 .tabella tbody tr:hover .sticky {
@@ -127,6 +123,7 @@
   font-family: var(--mono);
   text-align: right;
   white-space: nowrap;
+  min-width: 56px;
 }
 .tabella td.num {
   text-align: right;
@@ -135,8 +132,11 @@
   font-family: var(--mono);
   font-size: 12px;
 }
+/* Parte d'opera: testi lunghi a capo entro una colonna generosa (no troncamento). */
 .parte {
-  max-width: 280px;
+  white-space: normal;
+  min-width: 200px;
+  max-width: 320px;
 }
 .warn {
   color: var(--warn);

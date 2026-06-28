@@ -1,0 +1,36 @@
+/* Tabella robusta e ADATTATIVA + colonna ancora congelata (sticky-left).
+ *
+ * Pattern consolidato (CSS-Tricks "sticky header + sticky first column"):
+ *  - table-layout:auto + width:auto + min-width:100% → il CONTENUTO determina la
+ *    larghezza; con min-width per colonna le colonne NON si comprimono né si
+ *    sovrappongono mai (si allarga la tabella e si scrolla in orizzontale).
+ *  - border-collapse:separate (+ border-spacing:0) è richiesto perché lo sticky
+ *    e i bordi convivano allo scroll: i bordi si mettono ESPLICITI sulle celle.
+ *
+ * Condivisa tra registro e schede-controllo via `composes` (niente duplicazione).
+ */
+.robusta {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+  width: auto;
+  min-width: 100%;
+}
+.robusta th,
+.robusta td {
+  min-width: 72px; /* garanzia anti-collasso: niente sovrapposizioni */
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+
+/* Colonna ANCORA congelata a sinistra: background PIENO (non far trasparire le
+   righe sotto durante lo scroll) e z-index sopra le celle normali. La cella
+   d'angolo (header sticky-top + sticky-left) alza ancora lo z-index nel consumer. */
+.fissa {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}

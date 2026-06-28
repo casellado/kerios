@@ -11,6 +11,15 @@
   margin-left: calc(50% - 50vw);
 }
 
+/* Accento CONFORMITÀ (verde/rosso): linguaggio diverso dai colori-DOCUMENTO
+   (blu/arancione sul testo dei numeri-link). Qui è sul BORDO della scheda. */
+.cardOk {
+  border-left: 5px solid var(--ok);
+}
+.cardNo {
+  border-left: 5px solid var(--bad);
+}
+
 .testa {
   display: flex;
   align-items: center;
@@ -87,16 +96,13 @@
   border-radius: var(--radius);
 }
 .prelievi {
-  min-width: 100%;
-  border-collapse: collapse;
+  composes: robusta from '../comuni/tabella.module.css';
   font-size: 13px;
   background: var(--surface);
 }
 .prelievi th,
 .prelievi td {
   padding: 6px 10px;
-  border-bottom: 1px solid var(--line-soft);
-  border-right: 1px solid var(--line-soft);
   text-align: left;
   white-space: nowrap;
 }
@@ -107,6 +113,14 @@
   color: var(--ink-soft);
   background: var(--paper);
 }
+/* colonna ANCORA congelata (Data): sticky-left; l'header d'angolo sopra tutto. */
+.fissaCol {
+  composes: fissa from '../comuni/tabella.module.css';
+}
+.prelievi thead th.fissaCol {
+  z-index: 4;
+  background: var(--paper);
+}
 /* fasce di testata unite (PRELIEVO CAMPIONE / PARTE DI OPERA / …) come l'ST36 */
 .bande th {
   text-align: center;
@@ -115,18 +129,24 @@
   background: color-mix(in srgb, var(--steel) 8%, var(--paper));
   border-bottom: 1px solid var(--line);
 }
-.parte {
+/* Parte d'opera: testi lunghi → a capo entro una colonna generosa (no nowrap,
+   no troncamento). Specificità più alta di `.prelievi td` per vincere il nowrap. */
+.prelievi td.parte {
   white-space: normal;
-  min-width: 160px;
-  max-width: 260px;
+  min-width: 220px;
+  max-width: 380px;
 }
-/* colonne del CONTROLLO (Rmin/Rm/Rck eff), unite per terzina: in risalto */
+/* colonne del CONTROLLO (Rmin/Rm/Rck eff), unite per terzina: in risalto.
+   `.prelievi td.ctrl` ha specificità più alta di `.robusta td` (vertical-align:top)
+   → il valore della terzina è centrato verticalmente, non in alto. */
 .ctrl {
   text-align: center;
-  vertical-align: middle;
   background: color-mix(in srgb, var(--steel) 6%, var(--surface));
   border-left: 1px solid var(--line);
   font-size: 14px;
+}
+.prelievi td.ctrl {
+  vertical-align: middle;
 }
 .ctrlB,
 .ctrlAperto {
@@ -137,10 +157,25 @@
 .ctrlAperto {
   background: var(--line-soft);
 }
+/* RIGA del prelievo PROBLEMATICO (semaforo conformità): evidenza su SFONDO riga
+   + bordo, distinta dai colori-documento che vivono sul TESTO del numero-link.
+   Non solo colore: c'è anche il ⚠ con testo accessibile nella cella R. */
+.rigaProblema td,
+.rigaProblema th {
+  background: var(--warn-bg);
+}
+.rigaProblema td:first-child {
+  box-shadow: inset 4px 0 0 var(--warn);
+}
+.flag {
+  color: var(--warn);
+  font-weight: 700;
+}
 .num {
   font-family: var(--mono);
   text-align: right;
   white-space: nowrap;
+  min-width: 56px;
 }
 .prelievi td.num {
   text-align: right;
