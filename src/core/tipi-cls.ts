@@ -93,7 +93,9 @@ export interface ControlloSalvato {
   rck: number;
   mix?: string;
   prelieviIds: string[];
-  esito: 'conforme' | 'non_conforme';
+  /** 'incompleto' = gruppo con n sotto il minimo del tipo (non è un controllo valido). */
+  esito: 'conforme' | 'non_conforme' | 'incompleto';
+  n: number; // numero prelievi del controllo (snapshot)
   rckEffettiva?: number; // solo Tipo A
   forzato: boolean; // l'utente ha confermato nonostante avvisi
   generato: string; // ISO timestamp

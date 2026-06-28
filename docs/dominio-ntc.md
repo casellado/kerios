@@ -313,6 +313,50 @@ export interface ProtostaControllo {   // proposta editabile
 export function raggruppa(prelievi: Prelievo[], modo: ModoRaggruppamento): ProtostaControllo[];
 ```
 
+### 1.4-quater-bis MISCELA OMOGENEA — discriminante FORTE (NTC §11.2.5)
+
+Il discriminante del controllo di accettazione è la **MISCELA OMOGENEA**: il
+controllo si esegue per ciascuna miscela omogenea, cioè calcestruzzo confezionato
+con la **stessa ricetta (MIX DESIGN)** e di uguale **classe di resistenza +
+esposizione + consistenza** (Circolare 2019: "stessa miscela, salvo lievi
+modifiche dei componenti"). Il MIX DESIGN codifica già queste classi (es.
+`PP01R40XC2S4IF` = R40 + XC2 + S4), quindi è il discriminante operativo:
+**Rck e mix hanno lo stesso peso** (mix diverso ⇒ miscela diversa anche a parità
+di Rck).
+
+Conseguenze (vincolanti, già nel codice da `de16b94`):
+- **Auto/Assistito**: raggruppano SOLO prelievi con lo **stesso mix**; mai mix
+  diversi nello stesso controllo (l'auto partiziona per mix, poi forma le terzine).
+- **Manuale**: l'utente può comporre liberamente, ma mescolare mix diversi genera
+  un **AVVISO FORTE** (non è una miscela omogenea ai sensi §11.2.5), superabile con
+  flag `forzato` tracciato. Gravità distinta: "mix diverso" (stesso Rck) vs
+  "Rck e mix diversi" (più grave).
+- Il menu "aggiungi prelievo" propone SOLO prelievi dello **stesso mix** del
+  controllo; gli altri non sono compatibili (per usarli serve l'azione manuale).
+
+### 1.4-quater-ter CONTROLLO APERTO + GUARDRAIL CUBETTI
+
+**NIENTE MEDIA MOBILE** (NTC/Circolare §C11.2.5): un prelievo appartiene a **UN
+SOLO controllo**. È VIETATO riusare prelievi/coppie già impiegati in un controllo
+per completarne un altro: lo stesso prelievo non può risultare ora conforme ora
+no. Implementazione: un prelievo già assegnato NON è più disponibile per altri
+gruppi (niente doppia assegnazione).
+
+**Stato CONTROLLO APERTO** (n < minimo per lo stesso mix): non è un errore né un
+fallimento, è un controllo **in attesa dei prelievi successivi** (getti di
+completamento ancora da eseguire). Si chiude con prelievi **NUOVI** dello stesso
+mix. Tre stati netti:
+- **CONFORME** (verde) · **NON CONFORME** (rosso) · **INCOMPLETO/APERTO** (neutro,
+  NON rosso). Un gruppo n<3 (Tipo A) è APERTO → NESSUN esito di conformità, niente
+  "forza e salva" come se fosse valido.
+
+**GUARDRAIL cubetti/prelievi**: 1 controllo Tipo A = **3 prelievi = 6 cubetti**.
+Per ogni mix si mostrano prelievi (multipli di 3), cubetti (multipli di 6) e
+**cosa manca** per chiudere i controlli aperti. Scopo: avvisare **prima della fine
+lavori** (i certificati vanno allegati alla Relazione a Strutture Ultimate),
+prevenendo la richiesta di integrazione del Genio Civile. Informativo, sempre
+visibile, **mai bloccante**.
+
 ### 1.5 Selezione Tipo A / Tipo B e procedura volumi > 1500 m³
 
 **Selezione automatica (non a carico dell'utente)** — Tipo B è di uso reale per

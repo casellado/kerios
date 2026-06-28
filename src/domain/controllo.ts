@@ -7,6 +7,7 @@ import {
   type Prelievo,
   type Soglie,
   type RisultatoControllo,
+  type ControlloSalvato,
   SOGLIE_DEFAULT,
 } from '../core/index.ts';
 import {
@@ -47,4 +48,50 @@ export function calcolaControllo(
       ? controlloTipoB(prelievi, optEngine)
       : controlloTipoA(prelievi, optEngine);
   return { suggerimento, tipoApplicato, risultato };
+}
+
+/**
+ * Un controllo è COMPLETO se ha il numero minimo di prelievi del suo tipo:
+ * Tipo A ≥ 3 (NTC), Tipo B ≥ 15. Un gruppo sotto il minimo NON è un controllo
+ * valido (resto/orfano): non gli si attribuisce un esito di conformità.
+ */
+export function controlloCompleto(r: RisultatoControllo, soglie: Soglie = SOGLIE_DEFAULT): boolean {
+  const min = r.tipo === 'B' ? soglie.cls.nPrelieviTipoB : soglie.cls.nPrelieviTipoAMin;
+  return r.n >= min;
+}
+
+export interface OpzioniSnapshot extends OpzioniCalcolo {
+  id: string;
+  generato: string; // ISO (passato da fuori: il dominio non legge l'orologio)
+}
+
+/**
+ * Costruisce lo SNAPSHOT salvabile di un controllo dai SUOI prelievi. Cattura i
+ * VALORI calcolati (non riferimenti): `prelieviIds` è una COPIA e tutti i campi
+ * sono primitivi del controllo. Un gruppo incompleto (n sotto il minimo) ha
+ * esito 'incompleto', mai 'conforme'/'non_conforme' (P2 del collaudo).
+ */
+export function costruisciControlloSalvato(
+  prelievi: readonly Prelievo[],
+  opts: OpzioniSnapshot,
+): ControlloSalvato {
+  const soglie = opts.soglie ?? SOGLIE_DEFAULT;
+  const { risultato: r } = calcolaControllo(prelievi, opts);
+  const completo = controlloCompleto(r, soglie);
+
+  const c: ControlloSalvato = {
+    id: opts.id,
+    wbs: prelievi[0]?.wbs ?? '',
+    tipo: r.tipo,
+    rck: r.rck,
+    prelieviIds: prelievi.map((p) => p.id), // SNAPSHOT (copia), non il riferimento di stato
+    esito: !completo ? 'incompleto' : r.conforme ? 'conforme' : 'non_conforme',
+    n: r.n,
+    forzato: opts.forzato ?? false,
+    generato: opts.generato,
+  };
+  const mix = prelievi[0]?.mix;
+  if (mix) c.mix = mix;
+  if (r.rckEffettiva != null) c.rckEffettiva = r.rckEffettiva;
+  return c;
 }

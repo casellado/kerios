@@ -19,6 +19,8 @@ export interface SoglieCls {
   };
   /** limite "miscela omogenea" oltre cui il Tipo B è obbligatorio (m³). */
   volumeTipoBObbligatorio: number;
+  /** n prelievi minimo per un controllo Tipo A completo (NTC). */
+  nPrelieviTipoAMin: number;
   /** n prelievi minimo per applicare il Tipo B. */
   nPrelieviTipoB: number;
   massaVolumica: { min: number; max: number };
@@ -44,6 +46,7 @@ export const SOGLIE_DEFAULT: Soglie = {
     tipoA: { deltaRcm: 3.5, deltaRcmin: 3.5 },
     tipoB: { fattoreS: 1.48, deltaRcmin: 3.5, cvAvviso: 0.15, cvRifiuto: 0.3 },
     volumeTipoBObbligatorio: 1500,
+    nPrelieviTipoAMin: 3,
     nPrelieviTipoB: 15,
     massaVolumica: { min: 2200, max: 2500 },
     volumeTipoA: { maxM3: 300 },

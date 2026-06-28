@@ -108,6 +108,74 @@ export function raggruppa(
   return out;
 }
 
+export interface OpzioniCompatibilita {
+  /** mix del controllo (solo questo mix è compatibile); undefined = nessun vincolo di mix. */
+  mix: string | undefined;
+  /** id già impegnati altrove (no media mobile) → esclusi. */
+  esclusi: ReadonlySet<string>;
+  /** date (ms) dei prelievi già nel gruppo, per ordinare per vicinanza temporale. */
+  dateRiferimento: readonly number[];
+}
+
+/**
+ * Prelievi COMPATIBILI con un controllo (menu "aggiungi", §1.4-quater-bis/ter):
+ * stesso mix, NON già assegnati (no media mobile), ordinati per VICINANZA
+ * TEMPORALE ai prelievi del gruppo (o per data se il gruppo è vuoto). Pura.
+ */
+export function prelieviCompatibili(
+  refertati: readonly Prelievo[],
+  opts: OpzioniCompatibilita,
+): Prelievo[] {
+  const dist = (p: Prelievo): number => {
+    const d = parseDataIt(p.data);
+    if (d == null) return Number.MAX_SAFE_INTEGER;
+    if (opts.dateRiferimento.length === 0) return d;
+    return Math.min(...opts.dateRiferimento.map((x) => Math.abs(x - d)));
+  };
+  return refertati
+    .filter((p) => !opts.esclusi.has(p.id) && (opts.mix == null || p.mix === opts.mix))
+    .sort((a, b) => dist(a) - dist(b));
+}
+
+/** Riga del GUARDRAIL per mix: quanti controlli Tipo A si chiudono e cosa manca. */
+export interface RigaGuardrail {
+  mix: string;
+  nRefertati: number;
+  terzineComplete: number; // controlli Tipo A completabili (3 prelievi)
+  restoAperto: number; // prelievi nel controllo aperto residuo (0..2)
+  prelieviMancanti: number; // per chiudere l'aperto (multipli di 3 → 0)
+  cubettiMancanti: number; // prelieviMancanti · 2
+}
+
+/**
+ * GUARDRAIL cubetti/prelievi per MIX (§1.4-quater-ter). Informativo, non bloccante:
+ * per ogni miscela omogenea dice quanti controlli Tipo A si chiudono e quanti
+ * prelievi/cubetti mancano per chiudere l'eventuale controllo aperto. Scopo:
+ * avvisare PRIMA della fine lavori (certificati per la Relazione a Strutture Ultimate).
+ * Conta solo i refertati. Il minimo Tipo A (3) viene dalle soglie.
+ */
+export function guardrailPerMix(
+  prelievi: readonly Prelievo[],
+  soglie: Soglie = SOGLIE_DEFAULT,
+): RigaGuardrail[] {
+  const min = soglie.cls.nPrelieviTipoAMin; // 3
+  const out: RigaGuardrail[] = [];
+  for (const arr of partiziona(prelievi.filter(refertato), (p) => p.mix)) {
+    const n = arr.length;
+    const restoAperto = n % min;
+    const prelieviMancanti = restoAperto === 0 ? 0 : min - restoAperto;
+    out.push({
+      mix: arr[0]?.mix ?? '',
+      nRefertati: n,
+      terzineComplete: Math.floor(n / min),
+      restoAperto,
+      prelieviMancanti,
+      cubettiMancanti: prelieviMancanti * 2,
+    });
+  }
+  return out;
+}
+
 /** Esito della verifica di MISCELA OMOGENEA su un gruppo (per il banner FORTE). */
 export interface AvvisoOmogeneita {
   omogenea: boolean;

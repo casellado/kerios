@@ -5,7 +5,12 @@ import type {
   Prelievo,
   TipoControllo,
 } from '../../core/index.ts';
-import { raggruppa, refertato, calcolaControllo } from '../../domain/index.ts';
+import {
+  raggruppa,
+  refertato,
+  costruisciControlloSalvato,
+  guardrailPerMix,
+} from '../../domain/index.ts';
 import { caricaTuttiControlli, salvaControllo, eliminaControllo } from '../../io/controlli.ts';
 import { formattaNumeroIt } from '../../io/formato.ts';
 import { useStore } from '../../stato/store.ts';
@@ -23,7 +28,7 @@ const STRATEGIE: { modo: ModoRaggruppamento; nome: string; desc: string }[] = [
   {
     modo: 'auto',
     nome: 'A · Auto-posizionale',
-    desc: 'Terzine consecutive nell’ordine del registro (metodo Excel).',
+    desc: 'Terzine consecutive per mix, nell’ordine del registro.',
   },
   {
     modo: 'assistito',
@@ -43,7 +48,6 @@ export function ControlliView() {
   const [modo, setModo] = useState<ModoRaggruppamento | ''>('');
   const [gruppi, setGruppi] = useState<GruppoState[]>([]);
   const [salvati, setSalvati] = useState<ControlloSalvato[]>([]);
-  const [msg, setMsg] = useState('');
 
   useEffect(() => {
     let on = true;
@@ -57,10 +61,19 @@ export function ControlliView() {
 
   const byId = useMemo(() => new Map(prelievi.map((p) => [p.id, p])), [prelievi]);
   const refert = useMemo(() => prelievi.filter(refertato), [prelievi]);
+  const guardrail = useMemo(() => guardrailPerMix(prelievi, soglie), [prelievi, soglie]);
+
+  // "no media mobile": un prelievo sta in UN solo controllo. Insieme di quelli
+  // già impegnati (in un gruppo della proposta o in un controllo salvato).
+  const assegnati = useMemo(() => {
+    const s = new Set<string>();
+    for (const g of gruppi) for (const id of g.prelieviIds) s.add(id);
+    for (const c of salvati) for (const id of c.prelieviIds) s.add(id);
+    return s;
+  }, [gruppi, salvati]);
 
   function genera(m: ModoRaggruppamento) {
     setModo(m);
-    setMsg('');
     if (m === 'manuale') {
       setGruppi([{ id: uid(), prelieviIds: [] }]);
       return;
@@ -76,28 +89,19 @@ export function ControlliView() {
   const risolvi = (ids: string[]): Prelievo[] =>
     ids.map((id) => byId.get(id)).filter((p): p is Prelievo => p != null);
 
-  async function salva(g: GruppoState, forzato: boolean) {
+  // idempotente: il controllo salvato usa l'ID STABILE del gruppo → ri-salvare
+  // lo stesso gruppo AGGIORNA la voce, non ne crea una nuova (fix P3).
+  async function salva(g: GruppoState) {
     const pr = risolvi(g.prelieviIds);
     if (pr.length === 0) return;
-    const esito = g.tipo
-      ? calcolaControllo(pr, { soglie, tipo: g.tipo, forzato })
-      : calcolaControllo(pr, { soglie, forzato });
-    const r = esito.risultato;
-    const c: ControlloSalvato = {
-      id: uid(),
-      wbs: pr[0]?.wbs ?? '',
-      tipo: r.tipo,
-      rck: r.rck,
-      prelieviIds: g.prelieviIds,
-      esito: r.conforme ? 'conforme' : 'non_conforme',
-      forzato,
+    const c = costruisciControlloSalvato(pr, {
+      id: g.id,
       generato: new Date().toISOString(),
-    };
-    if (pr[0]?.mix) c.mix = pr[0].mix;
-    if (r.rckEffettiva != null) c.rckEffettiva = r.rckEffettiva;
+      soglie,
+      ...(g.tipo ? { tipo: g.tipo } : {}),
+    });
     await salvaControllo(c);
     setSalvati(await caricaTuttiControlli());
-    setMsg(`Controllo ${r.tipo} salvato (${c.esito}${forzato ? ', forzato' : ''}).`);
   }
 
   async function elimina(id: string) {
@@ -119,10 +123,31 @@ export function ControlliView() {
         Controlli di accettazione
       </h2>
       <p className={styles.intro}>
-        {refert.length} prelievi refertati disponibili. La strategia <strong>propone</strong> i
-        gruppi; tu li
-        <strong> rivedi</strong> e confermi. Nessun verdetto è automatico.
+        {refert.length} prelievi refertati. La strategia <strong>propone</strong> i gruppi; tu li{' '}
+        <strong>rivedi</strong> e confermi. Nessun verdetto è automatico.
       </p>
+
+      {guardrail.length > 0 && (
+        <section className={styles.guardrail} aria-labelledby="gr-titolo">
+          <h3 id="gr-titolo" className={styles.grTitolo}>
+            Guardrail per mix — cosa manca per chiudere i controlli
+          </h3>
+          <ul className={styles.grLista}>
+            {guardrail.map((g) => (
+              <li key={g.mix} className={styles.grRiga}>
+                <span className={styles.grMix}>{g.mix || '(senza mix)'}</span>
+                <span className={styles.grDati}>
+                  {g.nRefertati} prelievi → {g.terzineComplete} controll
+                  {g.terzineComplete === 1 ? 'o' : 'i'} Tipo A completi
+                  {g.restoAperto > 0
+                    ? ` · 1 aperto: mancano ${g.prelieviMancanti} prelievi (${g.cubettiMancanti} cubetti)`
+                    : ' · nessun controllo aperto'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className={styles.strategie} role="group" aria-label="Strategia di raggruppamento">
         {STRATEGIE.map((s) => (
@@ -139,10 +164,6 @@ export function ControlliView() {
         ))}
       </div>
 
-      <p className={styles.stato} role="status" aria-live="polite">
-        {msg}
-      </p>
-
       {modo === 'manuale' && (
         <button
           type="button"
@@ -158,7 +179,8 @@ export function ControlliView() {
           key={g.id}
           indice={i + 1}
           prelievi={risolvi(g.prelieviIds)}
-          disponibili={refert.filter((p) => !g.prelieviIds.includes(p.id))}
+          refertati={refert}
+          assegnati={assegnati}
           soglie={soglie}
           tipoForzato={g.tipo}
           onRimuovi={(id) =>
@@ -175,7 +197,7 @@ export function ControlliView() {
             })
           }
           onElimina={() => setGruppi((gs) => gs.filter((x) => x.id !== g.id))}
-          onSalva={(forzato) => void salva(g, forzato)}
+          onSalva={() => salva(g)}
         />
       ))}
 
@@ -187,13 +209,22 @@ export function ControlliView() {
           <ul className={styles.salvLista}>
             {salvati.map((c) => (
               <li key={c.id} className={styles.salvItem}>
-                <EsitoBadge conforme={c.esito === 'conforme'} forzato={c.forzato} />
+                {c.esito === 'incompleto' ? (
+                  <EsitoBadge
+                    conforme={false}
+                    forzato={c.forzato}
+                    stato="incompleto"
+                    testo="Incompleto"
+                  />
+                ) : (
+                  <EsitoBadge conforme={c.esito === 'conforme'} forzato={c.forzato} />
+                )}
                 <span className={styles.salvInfo}>
                   Tipo {c.tipo} · Rck {formattaNumeroIt(c.rck)} ·{' '}
                   {c.rckEffettiva != null
                     ? `Rck eff ${formattaNumeroIt(c.rckEffettiva, 2)} · `
                     : ''}
-                  {c.prelieviIds.length} prelievi · {c.wbs}
+                  {c.n} prelievi · {c.wbs}
                 </span>
                 <button
                   type="button"

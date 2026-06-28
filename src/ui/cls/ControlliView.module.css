@@ -8,6 +8,43 @@
   font-size: 14px;
 }
 
+.guardrail {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--signal);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+.grTitolo {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.grLista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.grRiga {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+}
+.grMix {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--steel);
+}
+.grDati {
+  color: var(--ink-soft);
+}
+
 .strategie {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

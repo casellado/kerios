@@ -23,6 +23,12 @@
   background: var(--bad-bg);
   border-color: color-mix(in srgb, var(--bad) 30%, transparent);
 }
+/* stato neutro: controllo aperto/incompleto, NON bocciato (non rosso). */
+.incompleto {
+  color: var(--ink-soft);
+  background: var(--line-soft);
+  border-color: var(--line);
+}
 .forzato {
   font-weight: 600;
   font-size: 11px;
