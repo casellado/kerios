@@ -11,7 +11,7 @@
   border: none;
   padding: 1px 2px;
   cursor: pointer;
-  color: var(--steel);
+  color: var(--ink); /* stato "da allegare": testo NORMALE, ma cliccabile (underline punteggiato) */
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
@@ -29,15 +29,17 @@
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
-/* stato del collegamento (mai solo colore: c'è anche l'icona 📎/⚠) */
-.presente .numero {
-  color: var(--ok);
+/* Semaforo DOCUMENTO (colore del NUMERO-link, come Excel; mai solo colore: c'è
+   anche l'icona 📎/⚠). Distinto dal semaforo CONFORMITÀ (verde/rosso sull'esito):
+   qui il linguaggio è normale → BLU (collegato) → ARANCIONE (mancante). */
+.assente .numero {
+  color: var(--ink); /* da allegare: normale */
+}
+.presente {
+  color: var(--focus); /* collegato: BLU iperlink */
 }
 .mancante {
-  color: var(--warn);
-}
-.assente .numero {
-  color: var(--steel);
+  color: var(--warn); /* mancante: ARANCIONE */
 }
 
 .data {
