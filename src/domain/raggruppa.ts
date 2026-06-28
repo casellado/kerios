@@ -72,11 +72,21 @@ function chiaveData(p: Prelievo): number {
   return parseDataIt(p.data) ?? Number.MAX_SAFE_INTEGER;
 }
 
+/** Chiave di partizione: GERARCHIA 1° WBS (l'opera) → 2° MIX design (NTC §11.2.5).
+ *  Stesso mix in OPERE diverse (WBS) = controlli separati (non si fondono opere);
+ *  i residui si accorpano SOLO entro (WBS, mix). Con registro mono-WBS è identico
+ *  al solo mix (una WBS per file). */
+function chiaveWbsMix(p: Prelievo): string {
+  return `${p.wbs}||${p.mix}`;
+}
+
 /**
  * Produce proposte di gruppi secondo la strategia. EDITABILI dall'utente.
- *  - 'auto': terzine consecutive nell'ordine dato (replica il metodo Excel).
- *  - 'assistito': raggruppa per mix + parte d'opera, ordina per vicinanza
- *    temporale, poi terzine. L'utente conferma/ritocca.
+ * GERARCHIA (PO+CTO, norma+pratica): WBS (opera) → mix (miscela omogenea) →
+ * terzine + UN residuo aperto per (WBS, mix).
+ *  - 'auto': terzine consecutive nell'ordine del registro, dentro (WBS, mix).
+ *  - 'assistito': terzine complete per parte d'opera + vicinanza temporale, ma i
+ *    RESIDUI si accorpano per (WBS, mix) — non si spezzano per parte.
  *  - 'manuale': nessuna proposta (l'utente compone liberamente).
  */
 export function raggruppa(
@@ -89,20 +99,24 @@ export function raggruppa(
   if (modo === 'manuale') return [];
 
   if (modo === 'auto') {
-    // MISCELA OMOGENEA (NTC §11.2.5): si raggruppa SOLO entro lo stesso mix design
-    // (che codifica resistenza+esposizione+consistenza). Prima partiziona per mix,
-    // poi terzine consecutive nell'ordine del registro DENTRO ciascun mix.
+    // Partiziona per (WBS, mix), poi terzine consecutive nell'ordine del registro.
     const out: ProtostaControllo[] = [];
-    for (const arr of partiziona(refert, (p) => p.mix)) {
+    for (const arr of partiziona(refert, chiaveWbsMix)) {
       for (const g of terzine(arr)) out.push(protosta(g, soglie));
     }
     return out;
   }
 
-  // 'assistito': bucket primario il MIX, poi parte d'opera; ordina per data, poi terzine.
+  // 'assistito': bucket primario (WBS, mix); DENTRO, sotto-raggruppa per parte
+  // d'opera (prima comparsa) e per data, poi appiattisci e spezza in terzine →
+  // le terzine complete restano coese per parte/tempo, ma c'è UN SOLO residuo
+  // aperto per (WBS, mix) (fix collaudo: 7106+7223 stesso mix, parti diverse →
+  // un controllo aperto, non due da 1). L'avviso "parti eterogenee" resta.
   const out: ProtostaControllo[] = [];
-  for (const arr of partiziona(refert, (p) => `${p.mix}||${p.parte}`)) {
-    const ordinati = [...arr].sort((a, b) => chiaveData(a) - chiaveData(b));
+  for (const arr of partiziona(refert, chiaveWbsMix)) {
+    const ordinati = partiziona(arr, (p) => p.parte)
+      .map((bucket) => [...bucket].sort((a, b) => chiaveData(a) - chiaveData(b)))
+      .flat();
     for (const g of terzine(ordinati)) out.push(protosta(g, soglie));
   }
   return out;

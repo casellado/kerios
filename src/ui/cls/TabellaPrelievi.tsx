@@ -148,6 +148,7 @@ export function TabellaPrelievi() {
                 Verbale
               </th>
               <th scope="col">Data</th>
+              <th scope="col">WBS</th>
               <th scope="col">Parte d'opera</th>
               <th scope="col">Impianto</th>
               <th scope="col">Mix - Sottomissione</th>
@@ -197,6 +198,7 @@ export function TabellaPrelievi() {
                     />
                   </th>
                   <td>{p.data}</td>
+                  <td className={styles.code}>{p.wbs}</td>
                   <td className={styles.parte}>{p.parte}</td>
                   <td>{p.impianto ?? '—'}</td>
                   <td className={styles.code}>

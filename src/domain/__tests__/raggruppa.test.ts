@@ -109,6 +109,26 @@ describe('raggruppa — strategia ASSISTITO (mix + parte + tempo)', () => {
     expect(bucketA.prelieviIds).toEqual([b.id, a.id]); // ordinati per data
     expect(bucketA.avvisi).toEqual([]); // omogeneo → nessun avviso
   });
+
+  it('FIX residui: stesso mix, stessa WBS, PARTI diverse → UN solo controllo aperto (non N da 1)', () => {
+    // il caso reale ST11: CLS 7106 (Muro d'Ala 1) e CLS 7223 (Muro d'Ala 2),
+    // stesso mix C40, stessa WBS, parti d'opera diverse.
+    const a = pref({ mix: 'C40', parte: "Muro d'Ala 1", data: '18/01/2024' });
+    const b = pref({ mix: 'C40', parte: "Muro d'Ala 2", data: '26/01/2024' });
+    const g = raggruppa([a, b], 'assistito');
+    expect(g).toHaveLength(1); // un controllo aperto, non due
+    expect([...g[0].prelieviIds].sort()).toEqual([a.id, b.id].sort());
+  });
+});
+
+describe('raggruppa — gerarchia WBS → mix (opere distinte)', () => {
+  it('AUTO: stesso mix in WBS diverse → gruppi SEPARATI (non fonde opere)', () => {
+    const a = pref({ wbs: 'ST11', mix: 'C40' });
+    const b = pref({ wbs: 'ST36', mix: 'C40' });
+    const g = raggruppa([a, b], 'auto');
+    expect(g).toHaveLength(2);
+    expect(g.every((x) => x.prelieviIds.length === 1)).toBe(true);
+  });
 });
 
 describe('raggruppa — strategia MANUALE', () => {
