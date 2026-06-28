@@ -60,16 +60,39 @@
   border-color: var(--steel);
 }
 
+/* La scheda Registro esce dalla fascia centrale (App .main max-width:1040px):
+   con ~18 colonne serve tutta la larghezza. Full-bleed + scroll orizzontale. */
 .scroll {
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 .tabella {
-  width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
   background: var(--surface);
+}
+
+/* Colonna «Verbale» congelata a sinistra: resta visibile scorrendo a destra.
+   Header già sticky-top; questa cella d'angolo è sticky su entrambi gli assi. */
+.sticky {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+.tabella thead th.sticky {
+  z-index: 3;
+  background: var(--paper);
+}
+.tabella tbody tr:hover .sticky {
+  background: #f7f9fb;
 }
 .caption {
   text-align: left;
@@ -117,6 +140,9 @@
 }
 .warn {
   color: var(--warn);
+}
+.vuotoCella {
+  color: var(--ink-soft);
 }
 .vuoto {
   color: var(--ink-soft);

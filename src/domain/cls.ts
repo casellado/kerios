@@ -30,7 +30,7 @@ import { giorniTra } from './date.ts';
 /** Stato derivato dai campi presenti (non un campo digitato). §1.0. */
 export function statoPrelievo(p: Prelievo): StatoPrelievo {
   if (p.r1 != null && p.r2 != null && p.certificato) return 'refertato';
-  if (p.lettera || p.dataRichiesta) return 'trasmesso';
+  if (p.protRichiesta || p.dataRichiesta) return 'trasmesso';
   return 'verbale';
 }
 

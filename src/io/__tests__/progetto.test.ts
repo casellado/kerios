@@ -86,6 +86,20 @@ describe('progetto — schema reale e validazione', () => {
     expect(() => validaProgetto(null)).toThrow();
   });
 
+  it('migrazione: vecchio campo "lettera" → "protRichiesta" (retro-compatibilità)', () => {
+    const grezzo = {
+      schema: SCHEMA_PROGETTO,
+      commessa: 'C',
+      cls: {
+        prelievi: [{ ...prelievo('p1'), lettera: 'CDG-VECCHIO' }],
+        controlli: [],
+      },
+    };
+    const p = validaProgetto(grezzo);
+    expect(p.cls.prelievi[0].protRichiesta).toBe('CDG-VECCHIO');
+    expect((p.cls.prelievi[0] as { lettera?: string }).lettera).toBeUndefined();
+  });
+
   it('serializza → valida è un round-trip fedele', () => {
     const p = costruisciProgetto({
       commessa: 'C',

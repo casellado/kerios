@@ -31,7 +31,7 @@ const COL = {
   ddt: 4,
   impianto: 5,
   mix: 6,
-  lettera: 7,
+  protRichiesta: 7,
   dataRichiesta: 8,
   protRicezione: 9,
   dataRicezione: 10,
@@ -82,7 +82,7 @@ export function mapRigaCls(cells: string[]): { prelievo: Prelievo | null; errore
   assegna(p, 'ddt', val(cells, COL.ddt));
   assegna(p, 'impianto', val(cells, COL.impianto));
   assegna(p, 'note', val(cells, COL.note));
-  assegna(p, 'lettera', val(cells, COL.lettera));
+  assegna(p, 'protRichiesta', val(cells, COL.protRichiesta));
   assegna(p, 'dataRichiesta', val(cells, COL.dataRichiesta));
   assegna(p, 'protRicezione', val(cells, COL.protRicezione));
   assegna(p, 'dataRicezione', val(cells, COL.dataRicezione));

@@ -58,10 +58,13 @@ const asDir = (d: FakeDir) => d as unknown as HandleCartella;
 const pdf = () => new File(['contenuto certificato'], 'cert.pdf', { type: 'application/pdf' });
 
 describe('documenti — collega per NOME-FILE nella cartella nota', () => {
-  it('certificato/verbale → pdf/, ddt → allegati/ (sottocartella per tipo)', () => {
+  it('certificato/verbale → pdf/, gli altri (ddt/mix/protocolli) → allegati/', () => {
     expect(sottocartellaDi('certificato')).toBe('pdf');
     expect(sottocartellaDi('verbale')).toBe('pdf');
     expect(sottocartellaDi('ddt')).toBe('allegati');
+    expect(sottocartellaDi('mix')).toBe('allegati');
+    expect(sottocartellaDi('protRichiesta')).toBe('allegati');
+    expect(sottocartellaDi('protRicezione')).toBe('allegati');
   });
 
   it('collega copia il file in calcestruzzo/<WBS>/pdf e ritorna il nome', async () => {

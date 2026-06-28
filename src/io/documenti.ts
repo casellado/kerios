@@ -19,14 +19,18 @@ import {
   type HandleCartella,
 } from './workspace.ts';
 
-/** Tipi di documento cls gestiti in M5. */
-export type TipoDocCls = 'certificato' | 'verbale' | 'ddt';
+/** Tipi di documento cls (uno per dato-link in tabella). */
+export type TipoDocCls =
+  'certificato' | 'verbale' | 'ddt' | 'mix' | 'protRichiesta' | 'protRicezione';
 
-/** Sottocartella di destinazione per tipo (pdf/ = PDF collegati; allegati/ = DDT…). */
+/** Sottocartella di destinazione per tipo (pdf/ = PDF "ufficiali"; allegati/ = il resto). */
 const SOTTO: Record<TipoDocCls, 'pdf' | 'allegati'> = {
   certificato: 'pdf',
   verbale: 'pdf',
   ddt: 'allegati',
+  mix: 'allegati',
+  protRichiesta: 'allegati',
+  protRicezione: 'allegati',
 };
 
 const MATERIALE_CLS = 'calcestruzzo';

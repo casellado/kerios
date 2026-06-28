@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { descriviPrelievo, type VistaPrelievo } from '../../domain/index.ts';
 import { parseSiglaImport } from '../../core/index.ts';
 import { presenzaDocCls, type PresenzaWbs } from '../../io/documenti.ts';
@@ -6,7 +6,7 @@ import { formattaNumeroIt } from '../../io/formato.ts';
 import { useStore } from '../../stato/store.ts';
 import { Semaforo } from '../comuni/Semaforo.tsx';
 import { InfoContestuale } from '../comuni/InfoContestuale.tsx';
-import { CellaDocumento } from './CellaDocumento.tsx';
+import { LinkDocumento } from './LinkDocumento.tsx';
 import styles from './TabellaPrelievi.module.css';
 
 interface Filtri {
@@ -90,6 +90,28 @@ export function TabellaPrelievi() {
   const set = (k: keyof Filtri) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) =>
     setFiltri((f) => ({ ...f, [k]: e.target.value }));
 
+  // Rotella verticale → scroll ORIZZONTALE quando la tabella eccede; al bordo
+  // lascia passare lo scroll verticale della pagina (listener non-passivo per
+  // poter chiamare preventDefault). PASSO 4.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      if (!el || el.scrollWidth <= el.clientWidth || e.shiftKey || e.deltaY === 0) return;
+      const atStart = el.scrollLeft <= 0;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
+      if ((e.deltaY > 0 && !atEnd) || (e.deltaY < 0 && !atStart)) {
+        el.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    }
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  const pres = (wbs: string) => presenze.get(wbs) ?? null;
+
   if (prelievi.length === 0) {
     return (
       <p className={styles.vuoto}>Nessun prelievo caricato. Importa un registro per iniziare.</p>
@@ -133,17 +155,33 @@ export function TabellaPrelievi() {
         </button>
       </div>
 
-      <div className={styles.scroll}>
+      <div className={styles.scroll} ref={scrollRef}>
         <table className={styles.tabella}>
           <caption className={styles.caption}>
-            Registro prelievi calcestruzzo — esito preliminare e fasi temporali
+            Registro prelievi calcestruzzo — il numero (verbale, DDT, certificato…) è cliccabile per
+            allegare/aprire il PDF. Colonna «Verbale» fissa; scorri a destra per i dati documentali.
           </caption>
           <thead>
             <tr>
-              <th scope="col">Verbale</th>
+              <th scope="col" className={styles.sticky}>
+                Verbale
+              </th>
               <th scope="col">Data</th>
               <th scope="col">Parte d'opera</th>
-              <th scope="col">Mix</th>
+              <th scope="col">Impianto</th>
+              <th scope="col">Mix - Sottomissione</th>
+              <th scope="col">
+                DDT
+                <InfoContestuale etichetta="Perché il DDT è allegato al prelievo?">
+                  Il DDT è allegato al prelievo: <strong>1 per prelievo</strong>, ed è anche fonte
+                  dei dati di consegna del calcestruzzo. Prassi di cantiere (NTC 2018 § 11.2.5).
+                </InfoContestuale>
+              </th>
+              <th scope="col">Prot. Richiesta D.L.</th>
+              <th scope="col">Prot. Ricezione D.L.</th>
+              <th scope="col">Certificato</th>
+              <th scope="col">Laboratorio</th>
+              <th scope="col">Data prova</th>
               <th scope="col" className={styles.num}>
                 Rck
               </th>
@@ -156,19 +194,11 @@ export function TabellaPrelievi() {
               <th scope="col" className={styles.num}>
                 R medio
               </th>
-              <th scope="col">Esito</th>
               <th scope="col" className={styles.num}>
                 Stagionatura
               </th>
-              <th scope="col">Certificato</th>
-              <th scope="col">Verbale</th>
-              <th scope="col">
-                DDT
-                <InfoContestuale etichetta="Perché il DDT è allegato al prelievo?">
-                  Il DDT è allegato al prelievo: <strong>1 per prelievo</strong>, ed è anche fonte
-                  dei dati di consegna del calcestruzzo. Prassi di cantiere (NTC 2018 § 11.2.5).
-                </InfoContestuale>
-              </th>
+              <th scope="col">Esito</th>
+              <th scope="col">Note</th>
             </tr>
           </thead>
           <tbody>
@@ -176,46 +206,87 @@ export function TabellaPrelievi() {
               const p = v.prelievo;
               return (
                 <tr key={p.id}>
-                  <th scope="row" className={styles.code}>
-                    {p.verbale}
+                  <th scope="row" className={`${styles.code} ${styles.sticky}`}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="verbale"
+                      campo="verbaleFile"
+                      valore={p.verbale}
+                      presenza={pres(p.wbs)}
+                    />
                   </th>
                   <td>{p.data}</td>
                   <td className={styles.parte}>{p.parte}</td>
-                  <td className={styles.code}>{p.mix}</td>
+                  <td>{p.impianto ?? '—'}</td>
+                  <td className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="mix"
+                      campo="mixFile"
+                      valore={p.mix}
+                      presenza={pres(p.wbs)}
+                    />
+                  </td>
+                  <td className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="ddt"
+                      campo="ddtFile"
+                      valore={p.ddt}
+                      presenza={pres(p.wbs)}
+                    />
+                  </td>
+                  <td className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="protRichiesta"
+                      campo="protRichiestaFile"
+                      valore={p.protRichiesta}
+                      data={p.dataRichiesta}
+                      presenza={pres(p.wbs)}
+                    />
+                  </td>
+                  <td className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="protRicezione"
+                      campo="protRicezioneFile"
+                      valore={p.protRicezione}
+                      data={p.dataRicezione}
+                      presenza={pres(p.wbs)}
+                    />
+                  </td>
+                  <td className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="certificato"
+                      campo="certificatoFile"
+                      valore={p.certificato}
+                      data={p.dataCertificato}
+                      presenza={pres(p.wbs)}
+                    />
+                  </td>
+                  <td>{p.laboratorio ?? '—'}</td>
+                  <td>{p.dataProva ?? '—'}</td>
                   <td className={styles.num}>{formattaNumeroIt(p.rck)}</td>
                   <td className={styles.num}>{formattaNumeroIt(p.r1)}</td>
                   <td className={styles.num}>{formattaNumeroIt(p.r2)}</td>
                   <td className={styles.num}>{formattaNumeroIt(v.rc, soglie.decimaliDisplay)}</td>
-                  <td>
-                    <Semaforo preliminare={v.preliminare} stato={v.stato} />
-                  </td>
                   <td className={styles.num} title={v.avvisoStagionatura ?? ''}>
                     {v.stagionaturaGg != null ? `${v.stagionaturaGg} gg` : '—'}
                     {v.avvisoStagionatura ? <span className={styles.warn}> ⚠</span> : null}
                   </td>
                   <td>
-                    <CellaDocumento
-                      prelievo={p}
-                      tipo="certificato"
-                      campo="certificatoFile"
-                      presenza={presenze.get(p.wbs) ?? null}
-                    />
+                    <Semaforo preliminare={v.preliminare} stato={v.stato} />
                   </td>
                   <td>
-                    <CellaDocumento
-                      prelievo={p}
-                      tipo="verbale"
-                      campo="verbaleFile"
-                      presenza={presenze.get(p.wbs) ?? null}
-                    />
-                  </td>
-                  <td>
-                    <CellaDocumento
-                      prelievo={p}
-                      tipo="ddt"
-                      campo="ddtFile"
-                      presenza={presenze.get(p.wbs) ?? null}
-                    />
+                    {p.note ? (
+                      <InfoContestuale glifo="🗒" etichetta={`Nota: ${p.note}`}>
+                        {p.note}
+                      </InfoContestuale>
+                    ) : (
+                      <span className={styles.vuotoCella}>—</span>
+                    )}
                   </td>
                 </tr>
               );

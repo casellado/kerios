@@ -4,6 +4,8 @@ import styles from './InfoContestuale.module.css';
 interface Props {
   /** Etichetta accessibile del pulsante (es. "Perché il DDT è allegato?"). */
   etichetta: string;
+  /** Glifo dell'icona (default ⓘ; es. "🗒" per una nota). */
+  glifo?: string;
   /** Spiegazione breve (2-3 righe) del perché, con la citazione NTC esatta. */
   children: React.ReactNode;
 }
@@ -15,7 +17,7 @@ interface Props {
  * o clic fuori; mai solo hover. Coerente con filosofia-kerios (automatismo
  * trasparente).
  */
-export function InfoContestuale({ etichetta, children }: Props) {
+export function InfoContestuale({ etichetta, glifo = 'ⓘ', children }: Props) {
   const [aperto, setAperto] = useState(false);
   const popId = useId();
   const radice = useRef<HTMLSpanElement>(null);
@@ -42,7 +44,7 @@ export function InfoContestuale({ etichetta, children }: Props) {
           if (e.key === 'Escape') setAperto(false);
         }}
       >
-        ⓘ
+        {glifo}
       </button>
       {aperto && (
         <span id={popId} role="note" className={styles.popover}>

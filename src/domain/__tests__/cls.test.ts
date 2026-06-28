@@ -49,8 +49,8 @@ describe('statoPrelievo (stato derivato, §1.0)', () => {
   it('Fase 1 = verbale', () => {
     expect(statoPrelievo(base)).toBe('verbale');
   });
-  it('Fase 2 = trasmesso (lettera/protocollo)', () => {
-    expect(statoPrelievo({ ...base, lettera: 'CDG-1' })).toBe('trasmesso');
+  it('Fase 2 = trasmesso (protocollo richiesta)', () => {
+    expect(statoPrelievo({ ...base, protRichiesta: 'CDG-1' })).toBe('trasmesso');
   });
   it('Fase 3 = refertato (r1,r2,certificato)', () => {
     expect(statoPrelievo({ ...base, r1: 40, r2: 41, certificato: 'C1' })).toBe('refertato');

@@ -36,8 +36,8 @@ export interface Prelievo {
   oraArrivo?: string; // hh:mm
   oraScarico?: string; // hh:mm
 
-  // --- Fase 2: TRASMESSO (opzionali finché non si invia la lettera) ---
-  lettera?: string;
+  // --- Fase 2: TRASMESSO (opzionali finché non si invia la richiesta) ---
+  protRichiesta?: string; // protocollo RICHIESTA D.L. (CSV col. 7; ex 'lettera')
   dataRichiesta?: string;
   protRicezione?: string;
   dataRicezione?: string;
@@ -50,11 +50,15 @@ export interface Prelievo {
   r1?: number; // N/mm² — resistenza del 1° provino provato
   r2?: number; // N/mm² — resistenza del 2° provino provato
 
-  // --- M5: documenti collegati (RIFERIMENTI per NOME-FILE; i FILE vivono in
-  //     <materiale>/<WBS>/{pdf,allegati} — la CARTELLA è la verità, non l'handle) ---
+  // --- Documenti collegati (RIFERIMENTI per NOME-FILE; i FILE vivono in
+  //     <materiale>/<WBS>/{pdf,allegati} — la CARTELLA è la verità, non l'handle).
+  //     Il numero in tabella è il LINK: ogni dato documentale ha il suo file. ---
   certificatoFile?: string; // PDF del certificato di prova, in pdf/
   verbaleFile?: string; // PDF del verbale di prelievo, in pdf/
-  ddtFile?: string; // DDT del cls (1 per prelievo, anche fonte dati), in allegati/
+  ddtFile?: string; // PDF del DDT (1 per prelievo, anche fonte dati), in allegati/
+  mixFile?: string; // PDF della sottomissione/mix design, in allegati/
+  protRichiestaFile?: string; // PDF della lettera di richiesta D.L., in allegati/
+  protRicezioneFile?: string; // PDF della ricezione D.L., in allegati/
   allegati?: AllegatoFile[]; // altri allegati (foto, ecc.), in allegati/
 
   // derivati (calcolati, non digitati): rmedio = (r1+r2)/2; stato = statoPrelievo(p)

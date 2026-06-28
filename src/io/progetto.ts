@@ -63,6 +63,19 @@ export function costruisciProgetto(opts: OpzioniProgetto): ProgettoKerios {
 }
 
 /**
+ * Migrazione retro-compatibile: i progetti salvati PRIMA della rinomina avevano
+ * il protocollo richiesta nel campo `lettera`. Lo porta su `protRichiesta` senza
+ * perdere nulla (e ripulisce il vecchio nome). Non distruttivo per i nuovi file.
+ */
+function migraPrelievo(p: Prelievo): Prelievo {
+  const legacy = p as Prelievo & { lettera?: string };
+  if (legacy.lettera == null || p.protRichiesta != null) return p;
+  const migrato = { ...legacy, protRichiesta: legacy.lettera };
+  delete (migrato as { lettera?: string }).lettera;
+  return migrato;
+}
+
+/**
  * Valida/normalizza un oggetto letto dal disco. Rifiuta uno schema non
  * riconosciuto (file estraneo o di versione futura) invece di fidarsi.
  */
@@ -78,7 +91,7 @@ export function validaProgetto(raw: unknown): ProgettoKerios {
     creato: o.creato ?? '',
     aggiornato: o.aggiornato ?? '',
     cls: {
-      prelievi: o.cls?.prelievi ?? [],
+      prelievi: (o.cls?.prelievi ?? []).map(migraPrelievo),
       controlli: o.cls?.controlli ?? [],
     },
   };
