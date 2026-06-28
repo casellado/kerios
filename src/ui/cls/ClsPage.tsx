@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { caricaSoglieEsterne } from '../../io/configurazione.ts';
 import { caricaTuttiPrelieviCls } from '../../io/importa.ts';
+import { allineaVersioneCache } from '../../io/workspace.ts';
 import { useStore } from '../../stato/store.ts';
+import { CartellaLavoro } from './CartellaLavoro.tsx';
 import { ImportRegistro } from './ImportRegistro.tsx';
 import { TabellaPrelievi } from './TabellaPrelievi.tsx';
 import { ControlliView } from './ControlliView.tsx';
@@ -18,18 +20,26 @@ type Scheda = 'registro' | 'controlli';
 export function ClsPage() {
   const setSoglie = useStore((s) => s.setSoglie);
   const setPrelievi = useStore((s) => s.setPrelievi);
+  const revisioneDati = useStore((s) => s.revisioneDati);
   const [scheda, setScheda] = useState<Scheda>('registro');
 
   useEffect(() => {
     let attivo = true;
-    void caricaSoglieEsterne().then((s) => attivo && setSoglie(s));
-    void caricaTuttiPrelieviCls()
-      .then((p) => attivo && setPrelievi(p))
-      .catch(() => {});
+    void (async () => {
+      // M4: prima di leggere, allinea la versione della cache (invalida l'eventuale
+      // cache stantia). Poi carica da IndexedDB (rigenerata dalla cartella-verità
+      // al collegamento). `revisioneDati` rifà partire questo load dopo un
+      // collegamento/ricarica dalla cartella.
+      await allineaVersioneCache();
+      const [s, p] = await Promise.all([caricaSoglieEsterne(), caricaTuttiPrelieviCls()]);
+      if (!attivo) return;
+      setSoglie(s);
+      setPrelievi(p);
+    })().catch(() => {});
     return () => {
       attivo = false;
     };
-  }, [setSoglie, setPrelievi]);
+  }, [setSoglie, setPrelievi, revisioneDati]);
 
   return (
     <section>
@@ -63,6 +73,8 @@ export function ClsPage() {
           Controlli di accettazione
         </button>
       </div>
+
+      <CartellaLavoro />
 
       {scheda === 'registro' ? (
         <>

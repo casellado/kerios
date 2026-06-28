@@ -29,10 +29,22 @@ export interface SintesiWbs {
   aggiornato?: string;
 }
 
+/**
+ * Coppia chiave→valore di servizio per l'app (M4): l'handle della cartella di
+ * lavoro (FileSystemDirectoryHandle, serializzabile via structured clone) e la
+ * versione della cache. NON sono dati di dominio: è solo stato dell'app per
+ * ritrovare la cartella-verità al riavvio e per invalidare la cache stantia.
+ */
+export interface AppKv {
+  chiave: string;
+  valore: unknown;
+}
+
 export class KeriosDB extends Dexie {
   prelieviCls!: Table<Prelievo, string>;
   sintesiWbs!: Table<SintesiWbs, string>;
   controlliCls!: Table<ControlloSalvato, string>;
+  appKv!: Table<AppKv, string>;
 
   constructor() {
     super('kerios');
@@ -44,6 +56,11 @@ export class KeriosDB extends Dexie {
     // restano valide; Dexie migra senza perdere i prelievi già importati.
     this.version(2).stores({
       controlliCls: 'id, wbs, tipo, rck',
+    });
+    // v3 (M4): stato di servizio dell'app (handle cartella, versione cache). Le
+    // tabelle dati restano invariate; Dexie le mantiene attraverso le versioni.
+    this.version(3).stores({
+      appKv: '&chiave',
     });
   }
 }

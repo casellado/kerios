@@ -18,6 +18,15 @@ interface StatoApp {
   /** Prelievi cls caricati in memoria (working set). */
   prelievi: Prelievo[];
   setPrelievi: (p: Prelievo[]) => void;
+
+  /**
+   * Contatore di REVISIONE della cache (M4): lo si incrementa quando la cache
+   * IndexedDB cambia fuori dal normale flusso (collegamento cartella, ricarica
+   * dalla cartella, invalidazione versione). Le viste lo usano come dipendenza
+   * per rileggere da IndexedDB. È un segnale, non un dato.
+   */
+  revisioneDati: number;
+  ricarica: () => void;
 }
 
 export const useStore = create<StatoApp>((set) => ({
@@ -29,4 +38,7 @@ export const useStore = create<StatoApp>((set) => ({
 
   prelievi: [],
   setPrelievi: (prelievi) => set({ prelievi }),
+
+  revisioneDati: 0,
+  ricarica: () => set((s) => ({ revisioneDati: s.revisioneDati + 1 })),
 }));

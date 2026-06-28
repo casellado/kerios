@@ -1,0 +1,109 @@
+.box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.titolo {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.azioni {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.collegata {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-right: 4px;
+}
+
+.primario,
+.secondario,
+.tenue {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.primario {
+  background: var(--steel);
+  color: #fff;
+}
+.primario:hover {
+  background: var(--steel-700);
+}
+.secondario {
+  background: var(--surface);
+  color: var(--steel);
+  border-color: var(--line);
+}
+.secondario:hover {
+  border-color: var(--steel);
+}
+.tenue {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--line);
+  font-weight: 500;
+}
+.tenue:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+.primario:disabled,
+.secondario:disabled,
+.tenue:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.primario:focus-visible,
+.secondario:focus-visible,
+.tenue:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.nota {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* input nativo nascosto ma raggiungibile da tastiera tramite la label. */
+.fileNascosto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.fileNascosto:focus-visible + .nota,
+.fileNascosto:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.stato {
+  margin: 12px 0 0;
+  min-height: 1.2em;
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--ink-soft);
+}
+.statoOk {
+  color: var(--ok);
+}
+.statoErrore {
+  color: var(--bad);
+}

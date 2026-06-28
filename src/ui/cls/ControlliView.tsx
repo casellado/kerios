@@ -50,10 +50,13 @@ function uid(): string {
 export function ControlliView() {
   const prelievi = useStore((s) => s.prelievi);
   const soglie = useStore((s) => s.soglie);
+  const revisioneDati = useStore((s) => s.revisioneDati);
   const [modo, setModo] = useState<ModoRaggruppamento | ''>('');
   const [gruppi, setGruppi] = useState<GruppoState[]>([]);
   const [salvati, setSalvati] = useState<ControlloSalvato[]>([]);
 
+  // ricarica i salvati al montaggio e quando la cache cambia (collegamento/
+  // ricarica dalla cartella, invalidazione versione — M4).
   useEffect(() => {
     let on = true;
     void caricaTuttiControlli()
@@ -62,7 +65,7 @@ export function ControlliView() {
     return () => {
       on = false;
     };
-  }, []);
+  }, [revisioneDati]);
 
   const byId = useMemo(() => new Map(prelievi.map((p) => [p.id, p])), [prelievi]);
   const refert = useMemo(() => prelievi.filter(refertato), [prelievi]);
