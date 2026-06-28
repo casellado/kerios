@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import type { Prelievo, Soglie } from '../core/index.ts';
 import { SOGLIE_DEFAULT } from '../core/index.ts';
+import type { HandleCartella } from '../io/workspace.ts';
 
 interface StatoApp {
   /** WBS attualmente in lavorazione (partizione attiva). null = tutte. */
@@ -18,6 +19,16 @@ interface StatoApp {
   /** Prelievi cls caricati in memoria (working set). */
   prelievi: Prelievo[];
   setPrelievi: (p: Prelievo[]) => void;
+  /** Aggiorna in-place un singolo prelievo (M5: salva il riferimento a un file). */
+  aggiornaPrelievo: (id: string, patch: Partial<Prelievo>) => void;
+
+  /**
+   * Handle della cartella commessa attualmente collegata (M5: le celle-documento
+   * vi copiano/aprono i PDF). null = nessuna cartella → documenti non gestibili.
+   * Non serializzato (handle tecnico): vive solo in memoria per la sessione.
+   */
+  cartella: HandleCartella | null;
+  setCartella: (h: HandleCartella | null) => void;
 
   /**
    * Contatore di REVISIONE della cache (M4): lo si incrementa quando la cache
@@ -50,6 +61,11 @@ export const useStore = create<StatoApp>((set) => ({
 
   prelievi: [],
   setPrelievi: (prelievi) => set({ prelievi }),
+  aggiornaPrelievo: (id, patch) =>
+    set((s) => ({ prelievi: s.prelievi.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+
+  cartella: null,
+  setCartella: (cartella) => set({ cartella }),
 
   revisioneDati: 0,
   ricarica: () => set((s) => ({ revisioneDati: s.revisioneDati + 1 })),

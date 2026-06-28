@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { descriviPrelievo, type VistaPrelievo } from '../../domain/index.ts';
 import { parseSiglaImport } from '../../core/index.ts';
+import { presenzaDocCls, type PresenzaWbs } from '../../io/documenti.ts';
 import { formattaNumeroIt } from '../../io/formato.ts';
 import { useStore } from '../../stato/store.ts';
 import { Semaforo } from '../comuni/Semaforo.tsx';
+import { InfoContestuale } from '../comuni/InfoContestuale.tsx';
+import { CellaDocumento } from './CellaDocumento.tsx';
 import styles from './TabellaPrelievi.module.css';
 
 interface Filtri {
@@ -26,7 +29,30 @@ function numeroSigla(verbale: string): number {
 export function TabellaPrelievi() {
   const prelievi = useStore((s) => s.prelievi);
   const soglie = useStore((s) => s.soglie);
+  const cartella = useStore((s) => s.cartella);
+  const revisioneDati = useStore((s) => s.revisioneDati);
   const [filtri, setFiltri] = useState<Filtri>(FILTRI_VUOTI);
+
+  // Mappa di presenza dei documenti per WBS (UN elenco per sottocartella, non N
+  // query per cella). Ricostruita quando cambia la cartella o i prelievi (es.
+  // dopo un collegamento → il nuovo file risulta presente).
+  const [presenze, setPresenze] = useState<Map<string, PresenzaWbs>>(new Map());
+  useEffect(() => {
+    if (!cartella) {
+      setPresenze(new Map());
+      return;
+    }
+    let attivo = true;
+    const wbsUniche = [...new Set(prelievi.map((p) => p.wbs).filter(Boolean))];
+    void (async () => {
+      const m = new Map<string, PresenzaWbs>();
+      for (const w of wbsUniche) m.set(w, await presenzaDocCls(cartella, w));
+      if (attivo) setPresenze(m);
+    })();
+    return () => {
+      attivo = false;
+    };
+  }, [cartella, prelievi, revisioneDati]);
 
   const viste = useMemo<VistaPrelievo[]>(
     () =>
@@ -134,6 +160,15 @@ export function TabellaPrelievi() {
               <th scope="col" className={styles.num}>
                 Stagionatura
               </th>
+              <th scope="col">Certificato</th>
+              <th scope="col">Verbale</th>
+              <th scope="col">
+                DDT
+                <InfoContestuale etichetta="Perché il DDT è allegato al prelievo?">
+                  Il DDT è allegato al prelievo: <strong>1 per prelievo</strong>, ed è anche fonte
+                  dei dati di consegna del calcestruzzo. Prassi di cantiere (NTC 2018 § 11.2.5).
+                </InfoContestuale>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -157,6 +192,30 @@ export function TabellaPrelievi() {
                   <td className={styles.num} title={v.avvisoStagionatura ?? ''}>
                     {v.stagionaturaGg != null ? `${v.stagionaturaGg} gg` : '—'}
                     {v.avvisoStagionatura ? <span className={styles.warn}> ⚠</span> : null}
+                  </td>
+                  <td>
+                    <CellaDocumento
+                      prelievo={p}
+                      tipo="certificato"
+                      campo="certificatoFile"
+                      presenza={presenze.get(p.wbs) ?? null}
+                    />
+                  </td>
+                  <td>
+                    <CellaDocumento
+                      prelievo={p}
+                      tipo="verbale"
+                      campo="verbaleFile"
+                      presenza={presenze.get(p.wbs) ?? null}
+                    />
+                  </td>
+                  <td>
+                    <CellaDocumento
+                      prelievo={p}
+                      tipo="ddt"
+                      campo="ddtFile"
+                      presenza={presenze.get(p.wbs) ?? null}
+                    />
                   </td>
                 </tr>
               );

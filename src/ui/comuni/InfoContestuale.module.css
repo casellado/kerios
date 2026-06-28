@@ -1,0 +1,48 @@
+.radice {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.icona {
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin-left: 4px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: help;
+}
+.icona:hover {
+  border-color: var(--steel);
+  color: var(--steel);
+}
+.icona:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: max-content;
+  max-width: 280px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(15, 23, 33, 0.16);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink);
+  white-space: normal;
+  text-align: left;
+}

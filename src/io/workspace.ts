@@ -47,6 +47,8 @@ export interface HandleCartella {
   readonly kind: 'directory';
   getDirectoryHandle(name: string, opts?: { create?: boolean }): Promise<HandleCartella>;
   getFileHandle(name: string, opts?: { create?: boolean }): Promise<HandleFile>;
+  removeEntry?(name: string, opts?: { recursive?: boolean }): Promise<void>;
+  keys?(): AsyncIterableIterator<string>;
   queryPermission?(opts?: OpzioniPermesso): Promise<StatoPermesso>;
   requestPermission?(opts?: OpzioniPermesso): Promise<StatoPermesso>;
 }
@@ -185,6 +187,62 @@ export async function leggiJson<T>(dir: HandleCartella, nome: string): Promise<T
     if (isNotFound(e)) return null;
     throw e;
   }
+}
+
+// --- Navigazione sottocartelle + file generici (M5) ------------------------
+
+/**
+ * Naviga `base → segmenti[0] → segmenti[1] → …` e ritorna la sottocartella.
+ * Con `create:true` le crea se mancano; senza, ritorna null se una manca (la
+ * struttura non c'è ancora). Es. segmenti = ['calcestruzzo', 'ST11', 'pdf'].
+ */
+export async function cartellaPercorso(
+  base: HandleCartella,
+  segmenti: readonly string[],
+  opts?: { create?: boolean },
+): Promise<HandleCartella | null> {
+  let dir = base;
+  for (const s of segmenti) {
+    try {
+      dir = await dir.getDirectoryHandle(s, { create: opts?.create ?? false });
+    } catch (e) {
+      if (isNotFound(e)) return null;
+      throw e;
+    }
+  }
+  return dir;
+}
+
+/** Copia i BYTE di `file` in `dir` col nome dato (default = file.name). Atomico. */
+export async function copiaFileIn(
+  dir: HandleCartella,
+  file: File,
+  nome: string = file.name,
+): Promise<string> {
+  const fh = await dir.getFileHandle(nome, { create: true });
+  const w = await fh.createWritable();
+  await w.write(file);
+  await w.close();
+  return nome;
+}
+
+/** Apre il file `nome` in `dir` (per leggerlo/aprirlo); null se non c'è. */
+export async function apriFile(dir: HandleCartella, nome: string): Promise<File | null> {
+  try {
+    const fh = await dir.getFileHandle(nome);
+    return await fh.getFile();
+  } catch (e) {
+    if (isNotFound(e)) return null;
+    throw e;
+  }
+}
+
+/** Elenca i NOMI delle voci in `dir` (per costruire la mappa di presenza). */
+export async function elencaNomi(dir: HandleCartella): Promise<string[]> {
+  if (!dir.keys) return [];
+  const nomi: string[] = [];
+  for await (const k of dir.keys()) nomi.push(k);
+  return nomi;
 }
 
 // --- Persistenza dell'handle e versione cache (appKv) ----------------------

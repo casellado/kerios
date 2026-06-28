@@ -50,7 +50,25 @@ export interface Prelievo {
   r1?: number; // N/mm² — resistenza del 1° provino provato
   r2?: number; // N/mm² — resistenza del 2° provino provato
 
+  // --- M5: documenti collegati (RIFERIMENTI per NOME-FILE; i FILE vivono in
+  //     <materiale>/<WBS>/{pdf,allegati} — la CARTELLA è la verità, non l'handle) ---
+  certificatoFile?: string; // PDF del certificato di prova, in pdf/
+  verbaleFile?: string; // PDF del verbale di prelievo, in pdf/
+  ddtFile?: string; // DDT del cls (1 per prelievo, anche fonte dati), in allegati/
+  allegati?: AllegatoFile[]; // altri allegati (foto, ecc.), in allegati/
+
   // derivati (calcolati, non digitati): rmedio = (r1+r2)/2; stato = statoPrelievo(p)
+}
+
+/**
+ * Riferimento a un file allegato, per NOME nella cartella nota (la verità). NON
+ * un handle tecnico: sopravvive a spostamenti/sync perché Kerios lo ritrova
+ * navigando la cartella. La `categoria` predispone l'acciaio (colate PIÙ d'una,
+ * trasporto) senza implementarlo ora.
+ */
+export interface AllegatoFile {
+  nome: string; // nome-file relativo nella cartella allegati/ della WBS
+  categoria?: 'ddt' | 'colata' | 'trasporto' | 'foto' | 'altro';
 }
 
 export interface EsitoValidita {
@@ -99,6 +117,8 @@ export interface ControlloSalvato {
   rckEffettiva?: number; // solo Tipo A
   forzato: boolean; // l'utente ha confermato nonostante avvisi
   generato: string; // ISO timestamp
+  /** PDF del documento di controllo ST36 (generato in M6), in pdf/. M5: solo il campo. */
+  documentoControllo?: string;
 }
 
 export interface RisultatoControllo {

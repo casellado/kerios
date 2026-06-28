@@ -128,6 +128,13 @@ poi ci clicco e si apre. L'associazione sopravvive al salvataggio/riapertura.
   - blocchi Rmin/Rm/Rck effettiva uniti per terzina (come l'Excel);
   - blocco firma: "IL DIRETTORE LAVORI" + nome (configurabile).
 - Massa volumica come colonna PRIMA di Rck, mostrata solo se valorizzata.
+- **MAX 6 CONTROLLI PER SCHEDA ST36** (decisione PO+CTO): una singola scheda ST36
+  contiene **al massimo 6 controlli**; oltre, si apre una **nuova scheda**. NON è
+  un limite sul totale dei controlli di un'opera (che ne ha molti): è la
+  **capienza del documento** → l'impaginazione va fatta a **gruppi di 6** (6 per
+  pagina/scheda, poi la successiva). Si stampano **solo i controlli COMPLETI**
+  (Tipo A/B con n al minimo): i controlli **APERTI** (incompleti, vedi
+  dominio-ntc.md §1.4-quater-ter) **non** vanno nella scheda ST36.
 
 ### (b) Verbale di prelievo (templating su template .docx — SOLO DOCX)
 > DECISIONE PO: Kerios genera SOLO il .docx; il PDF lo fa l'utente (Word) e lo
@@ -245,6 +252,28 @@ perché lo schema è lo stesso. Aggiornare l'app cantiere non tocca Kerios deskt
 
 > Pacchetto condiviso (es. `kerios-core`): tipi di dominio + schema/validazione
 > JSON verbale + client del Cuore. Usato sia da Kerios sia dall'app Cantiere.
+
+### MONOREPO — K2 e Kerios in UN solo repository (decisione PO+CTO)
+A M11 K2 (app Cantiere) e Kerios passano in un **monorepo** con **npm
+workspaces**. K2 resta un **progetto separato** (suo deploy, suo ciclo di vita) ma
+**condivide `kerios-core`** (tipi di dominio + schema/validazione JSON del verbale
++ client del Cuore) dentro lo stesso repo. Principio: *"i pacchetti che cambiano
+insieme vivono insieme"* — un **singolo commit** allinea entrambe le app e il
+**contratto non può divergere** (chi scrive in cantiere e chi legge in ufficio
+usano lo stesso identico schema, atomicamente).
+
+Struttura del monorepo:
+```
+packages/
+  kerios-core/        tipi dominio + schema JSON verbale + client Cuore (condiviso)
+apps/
+  kerios-app/         Kerios desktop (questo progetto)
+  k2/                 app Cantiere (operatori)
+```
+`src/core/` di questo progetto è **isolato dall'inizio** (M1, confine ESLint
+ui→domain→io) PROPRIO per estrarsi qui senza attriti: a M11 diventa
+`packages/kerios-core` e le due app lo importano. Fino ad allora resta in
+`src/core/` (nessun costo anticipato di tooling monorepo).
 
 ---
 

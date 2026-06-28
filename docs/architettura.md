@@ -99,6 +99,27 @@ nel file di progetto).
 - Limiti free rilevanti: 500 build/mese (ampi per il team), siti illimitati,
   banda illimitata. Nessun tetto di banda (a differenza dei 100 GB di GitHub).
 
+## Monorepo a M11 (K2 + Kerios condividono kerios-core)
+
+> Decisione PO+CTO (vedi roadmap M11). Non si fa ora: si prepara il terreno.
+
+A M11 le due app — **Kerios** (desktop, legge) e **K2** (Cantiere, scrive) —
+vivono in **UN repository monorepo** con **npm workspaces**, condividendo
+`kerios-core` (tipi di dominio + schema/validazione JSON del verbale + client del
+Cuore). Motivo: *i pacchetti che cambiano insieme vivono insieme* → un singolo
+commit allinea entrambe le app e **il contratto JSON non può divergere**.
+
+```
+packages/kerios-core   contratto condiviso (oggi = src/core/)
+apps/kerios-app        Kerios desktop (oggi = questo progetto)
+apps/k2                app Cantiere (operatori)
+```
+
+Conseguenza ARCHITETTURALE già attiva: `src/core/` è tenuto **isolato** dal
+confine ESLint (`ui → domain → io`; `core/` non importa né React né io) **fin da
+M1** proprio per estrarsi in `packages/kerios-core` a costo quasi nullo. Fino a
+M11 resta in `src/core/`: nessun costo anticipato di tooling monorepo.
+
 ## Qualità minima
 
 - TypeScript strict.

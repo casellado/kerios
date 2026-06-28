@@ -36,6 +36,7 @@ export function CartellaLavoro() {
   const ricarica = useStore((s) => s.ricarica);
   const sporco = useStore((s) => s.sporco);
   const segnaPulito = useStore((s) => s.segnaPulito);
+  const setCartella = useStore((s) => s.setCartella);
   const inputId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -112,6 +113,7 @@ export function CartellaLavoro() {
       }
       await salvaHandleCommessa(dir);
       setHandle(dir);
+      setCartella(dir); // disponibile alle celle-documento (M5)
       setDaRiaprire(null);
       await ereditaDa(dir);
     } catch (e) {
@@ -130,6 +132,7 @@ export function CartellaLavoro() {
         return;
       }
       setHandle(daRiaprire);
+      setCartella(daRiaprire); // disponibile alle celle-documento (M5)
       setDaRiaprire(null);
       await ereditaDa(daRiaprire);
     } catch (e) {
@@ -190,6 +193,7 @@ export function CartellaLavoro() {
   async function eseguiScollega() {
     await dimenticaHandleCommessa();
     setHandle(null);
+    setCartella(null);
     setDaRiaprire(null);
     avvisa('Cartella scollegata. La cache resta finché non la ricarichi o reimporti.');
   }

@@ -41,6 +41,33 @@ terracotta). Il prototipo `reference/index.html` è il riferimento vivo.
 - Movimento minimo: hover sulle porte, nessuna animazione gratuita.
   Rispettare `prefers-reduced-motion`.
 
+## Info contestuale ⓘ — il PERCHÉ normativo, a portata di clic
+
+> Decisione PO+CTO. Funzione **trasversale** (non una milestone): vale ovunque
+> Kerios prenda una decisione "automatica".
+
+Ogni scelta che Kerios fa AL POSTO dell'utente (un esito, una soglia, un
+raggruppamento per miscela omogenea, un tipo di controllo, un guardrail, un
+allegato dovuto) **nasce con una piccola ⓘ** accanto. Cliccandola si apre una
+spiegazione di **2-3 righe** del **perché normativo**, con la **citazione NTC
+ESATTA** (pescata da `dominio-ntc.md`, non inventata). Non un help generico: la
+ragione puntuale di QUELLA scelta, lì dove appare.
+
+Principio (coerente con `filosofia-kerios.md`): l'automatismo toglie fatica, ma
+l'operatore resta in controllo **capendo** perché. La ⓘ rende l'automatismo
+**trasparente e verificabile**, non una scatola nera.
+
+Regole:
+- **Breve e a richiesta**: l'icona è discreta; il testo compare al clic/tasto, non
+  ingombra. Niente muri di testo.
+- **Citazione esatta**: la frase normativa è quella di `dominio-ntc.md` (fonte
+  unica); se cambia lì, cambia ovunque. Mai parafrasi a memoria.
+- **a11y**: l'icona è un vero `<button>` con `aria-label` ("Perché?"), apribile da
+  tastiera, il popover è annunciato e chiudibile con Esc; mai solo hover.
+- **Nuove UI nascono con la loro ⓘ**: da ora ogni parte nuova con una scelta da
+  spiegare include la ⓘ fin da subito. Le schermate **M1-M4** già fatte
+  recuperano le ⓘ mancanti in un **giro mirato** dedicato.
+
 ## Accessibilità (vincolante, vedi CLAUDE.md §5)
 
 - `<table>` semantica, `<th scope="col">`.
