@@ -30,12 +30,16 @@ interface Props {
   opera?: string;
   /** presenza documenti per WBS (per il semaforo dei link ereditati dal registro). */
   presenze?: Map<string, PresenzaWbs>;
-  onSetOpera: (opera: string) => void;
-  onRimuovi: (id: string) => void;
-  onAggiungi: (id: string) => void;
-  onSetTipo: (t: TipoControllo | undefined) => void;
-  onElimina: () => void;
-  onSalva: () => Promise<void> | void;
+  /** ANTEPRIMA: sola lettura (schede di export) — niente Togli/Aggiungi/Salva/Opera-edit. */
+  readOnly?: boolean;
+  /** WBS da mostrare nel titolo "Controllo N — WBS XX" (SOLO a schermo, fuori dall'export). */
+  etichettaWbs?: string;
+  onSetOpera?: (opera: string) => void;
+  onRimuovi?: (id: string) => void;
+  onAggiungi?: (id: string) => void;
+  onSetTipo?: (t: TipoControllo | undefined) => void;
+  onElimina?: () => void;
+  onSalva?: () => Promise<void> | void;
 }
 
 const fmt = (x: number | undefined): string => formattaNumeroIt(x, 2);
@@ -43,6 +47,7 @@ const CAP_MENU = 100;
 
 export function GruppoControllo(props: Props) {
   const { indice, prelievi, refertati, assegnati, soglie, tipoForzato } = props;
+  const readOnly = props.readOnly ?? false;
   const ricercaId = useId();
   const [ricerca, setRicerca] = useState('');
   const [salvato, setSalvato] = useState(false);
@@ -91,7 +96,7 @@ export function GruppoControllo(props: Props) {
   const menu = compatibili.slice(0, CAP_MENU);
 
   async function handleSalva() {
-    await props.onSalva();
+    await props.onSalva?.();
     setSalvato(true);
   }
 
@@ -140,31 +145,44 @@ export function GruppoControllo(props: Props) {
   return (
     <article className={`${styles.card} ${accento}`} aria-label={`Controllo ${indice}`}>
       <header className={styles.testa}>
-        <h3 className={styles.titolo}>Controllo {indice}</h3>
+        <h3 className={styles.titolo}>
+          Controllo {indice}
+          {props.etichettaWbs ? ` — WBS ${props.etichettaWbs}` : ''}
+        </h3>
         {vuoto ? null : completo ? (
           <EsitoBadge conforme={r.conforme} />
         ) : (
           <EsitoBadge conforme={false} stato="incompleto" testo="Incompleto · aperto" />
         )}
-        <button type="button" className={styles.elimina} onClick={props.onElimina}>
-          Elimina gruppo
-        </button>
+        {!readOnly && (
+          <button type="button" className={styles.elimina} onClick={props.onElimina}>
+            Elimina gruppo
+          </button>
+        )}
       </header>
 
       {/* OPERA specifica del controllo (testo libero) — sotto l'intestazione
           cantiere; viene salvata sul ControlloSalvato (servirà al doc ST36 M6). */}
-      {!vuoto && (
-        <label className={styles.operaRiga}>
-          <span className={styles.operaLbl}>Opera</span>
-          <input
-            type="text"
-            className={styles.operaInput}
-            value={props.opera ?? ''}
-            placeholder="es. TOMBINO SCATOLARE TO59 - pk 7+624"
-            onChange={(e) => props.onSetOpera(e.target.value)}
-          />
-        </label>
-      )}
+      {!vuoto &&
+        (readOnly ? (
+          props.opera ? (
+            <p className={styles.operaRiga}>
+              <span className={styles.operaLbl}>Opera</span>
+              <span>{props.opera}</span>
+            </p>
+          ) : null
+        ) : (
+          <label className={styles.operaRiga}>
+            <span className={styles.operaLbl}>Opera</span>
+            <input
+              type="text"
+              className={styles.operaInput}
+              value={props.opera ?? ''}
+              placeholder="es. TOMBINO SCATOLARE TO59 - pk 7+624"
+              onChange={(e) => props.onSetOpera?.(e.target.value)}
+            />
+          </label>
+        ))}
 
       {/* Tipo suggerito + forzatura (solo per gruppi non vuoti). */}
       {!vuoto && (
@@ -172,21 +190,23 @@ export function GruppoControllo(props: Props) {
           <span className={styles.motivo}>
             <strong>Tipo {esito.tipoApplicato}</strong> · {esito.suggerimento.motivo}
           </span>
-          <label className={styles.tipoSel}>
-            <span className={styles.tipoLbl}>Tipo</span>
-            <select
-              value={tipoForzato ?? ''}
-              onChange={(e) =>
-                props.onSetTipo(
-                  e.target.value === '' ? undefined : (e.target.value as TipoControllo),
-                )
-              }
-            >
-              <option value="">Suggerito ({esito.suggerimento.tipo})</option>
-              <option value="A">Forza A</option>
-              <option value="B">Forza B</option>
-            </select>
-          </label>
+          {!readOnly && (
+            <label className={styles.tipoSel}>
+              <span className={styles.tipoLbl}>Tipo</span>
+              <select
+                value={tipoForzato ?? ''}
+                onChange={(e) =>
+                  props.onSetTipo?.(
+                    e.target.value === '' ? undefined : (e.target.value as TipoControllo),
+                  )
+                }
+              >
+                <option value="">Suggerito ({esito.suggerimento.tipo})</option>
+                <option value="A">Forza A</option>
+                <option value="B">Forza B</option>
+              </select>
+            </label>
+          )}
         </div>
       )}
 
@@ -210,7 +230,7 @@ export function GruppoControllo(props: Props) {
               <th colSpan={3} scope="colgroup">
                 Controllo «Tipo {r.tipo}»
               </th>
-              <th aria-hidden="true" />
+              {!readOnly && <th aria-hidden="true" />}
             </tr>
             <tr>
               <th scope="col" className={styles.fissaCol}>
@@ -245,7 +265,7 @@ export function GruppoControllo(props: Props) {
               <th scope="col" className={styles.num}>
                 R<sub>ck</sub> eff.
               </th>
-              <th scope="col" />
+              {!readOnly && <th scope="col" />}
             </tr>
           </thead>
           <tbody>
@@ -303,16 +323,18 @@ export function GruppoControllo(props: Props) {
                     ) : null}
                   </td>
                   {i === 0 && controlloCelle}
-                  <td className={styles.num}>
-                    <button
-                      type="button"
-                      className={styles.togli}
-                      onClick={() => props.onRimuovi(p.id)}
-                      aria-label={`Togli ${p.verbale} dal controllo ${indice}`}
-                    >
-                      Togli
-                    </button>
-                  </td>
+                  {!readOnly && (
+                    <td className={styles.num}>
+                      <button
+                        type="button"
+                        className={styles.togli}
+                        onClick={() => props.onRimuovi?.(p.id)}
+                        aria-label={`Togli ${p.verbale} dal controllo ${indice}`}
+                      >
+                        Togli
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -328,42 +350,44 @@ export function GruppoControllo(props: Props) {
       </ScrollOrizzontale>
 
       {/* Menu AGGIUNGI: solo prelievi compatibili + ricerca (scala). */}
-      <div className={styles.aggiungiBox}>
-        <label className={styles.aggiungi}>
-          <span className={styles.tipoLbl}>
-            Aggiungi prelievo {mixGruppo ? `(mix ${mixGruppo})` : ''}
-          </span>
-          <select
-            value=""
-            aria-describedby={`${ricercaId}-hint`}
-            onChange={(e) => {
-              if (e.target.value) props.onAggiungi(e.target.value);
-            }}
-          >
-            <option value="">
-              {menu.length === 0 ? '— nessun prelievo compatibile —' : '— scegli —'}
-            </option>
-            {menu.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.verbale} · {p.data} · R {fmt(resistenzaPrelievo(p))}
+      {!readOnly && (
+        <div className={styles.aggiungiBox}>
+          <label className={styles.aggiungi}>
+            <span className={styles.tipoLbl}>
+              Aggiungi prelievo {mixGruppo ? `(mix ${mixGruppo})` : ''}
+            </span>
+            <select
+              value=""
+              aria-describedby={`${ricercaId}-hint`}
+              onChange={(e) => {
+                if (e.target.value) props.onAggiungi?.(e.target.value);
+              }}
+            >
+              <option value="">
+                {menu.length === 0 ? '— nessun prelievo compatibile —' : '— scegli —'}
               </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.ricerca}>
-          <span className={styles.tipoLbl}>Cerca</span>
-          <input
-            type="search"
-            value={ricerca}
-            onChange={(e) => setRicerca(e.target.value)}
-            placeholder="verbale o parte d’opera"
-          />
-        </label>
-        <span id={`${ricercaId}-hint`} className={styles.hint}>
-          Solo stesso mix, non già assegnati, per vicinanza temporale.
-          {compatibili.length > CAP_MENU ? ` Mostrati ${CAP_MENU} di ${compatibili.length}.` : ''}
-        </span>
-      </div>
+              {menu.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.verbale} · {p.data} · R {fmt(resistenzaPrelievo(p))}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.ricerca}>
+            <span className={styles.tipoLbl}>Cerca</span>
+            <input
+              type="search"
+              value={ricerca}
+              onChange={(e) => setRicerca(e.target.value)}
+              placeholder="verbale o parte d’opera"
+            />
+          </label>
+          <span id={`${ricercaId}-hint`} className={styles.hint}>
+            Solo stesso mix, non già assegnati, per vicinanza temporale.
+            {compatibili.length > CAP_MENU ? ` Mostrati ${CAP_MENU} di ${compatibili.length}.` : ''}
+          </span>
+        </div>
+      )}
 
       {/* INCOMPLETO (controllo aperto): nessun verdetto, guardrail. */}
       {!vuoto && !completo && (
@@ -403,7 +427,7 @@ export function GruppoControllo(props: Props) {
       )}
 
       {/* Azione di salvataggio + FEEDBACK (fix P1: niente pulsante "frizzato"). */}
-      {!vuoto && (
+      {!vuoto && !readOnly && (
         <div className={styles.azioni}>
           {salvato ? (
             <span className={styles.salvato} role="status">

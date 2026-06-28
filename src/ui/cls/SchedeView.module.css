@@ -1,0 +1,131 @@
+.testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.titolo {
+  margin: 0;
+  font-size: 18px;
+}
+.ricalcola {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--steel);
+  cursor: pointer;
+}
+.ricalcola:hover {
+  border-color: var(--steel);
+}
+.intro {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.problemi {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.stato {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--ink-soft);
+}
+.vuoto {
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+}
+
+.scheda {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.schTesta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.schTitolo {
+  margin: 0;
+  font-size: 16px;
+}
+.badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.bdgOk {
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+.bdgTodo {
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.bdgStale {
+  color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.controlloBox {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 12px;
+}
+.sposta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+.spostaLbl {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+}
+.sposta select {
+  font: inherit;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.degrado {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.degradoNota {
+  font-size: 12px;
+  color: var(--ink-soft);
+}

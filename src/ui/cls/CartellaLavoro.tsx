@@ -156,11 +156,12 @@ export function CartellaLavoro() {
         avvisa('Permesso negato in scrittura: riprova il consenso.', 'errore');
         return false;
       }
-      const { prelievi, controlli } = await statoCacheCls();
+      const { prelievi, controlli, schede } = await statoCacheCls();
       const p = await salvaProgettoSuCartella(handle, {
         commessa: handle.name,
         prelievi,
         controlli,
+        schede,
         aggiornato: new Date().toISOString(),
       });
       segnaPulito(); // dati versati nella cartella-verità
@@ -235,11 +236,12 @@ export function CartellaLavoro() {
   async function scaricaProgetto() {
     setOccupato(true);
     try {
-      const { prelievi, controlli } = await statoCacheCls();
+      const { prelievi, controlli, schede } = await statoCacheCls();
       const p = costruisciProgetto({
         commessa: 'kerios',
         prelievi,
         controlli,
+        schede,
         aggiornato: new Date().toISOString(),
       });
       const blob = new Blob([serializzaProgetto(p)], { type: 'application/json' });

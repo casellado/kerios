@@ -9,10 +9,11 @@ import { AnagraficaCantiere } from './AnagraficaCantiere.tsx';
 import { ImportRegistro } from './ImportRegistro.tsx';
 import { TabellaPrelievi } from './TabellaPrelievi.tsx';
 import { ControlliView } from './ControlliView.tsx';
+import { SchedeView } from './SchedeView.tsx';
 import { IntestazioneCantiere } from '../comuni/IntestazioneCantiere.tsx';
 import styles from './ClsPage.module.css';
 
-type Scheda = 'registro' | 'controlli';
+type Scheda = 'registro' | 'controlli' | 'schede';
 
 /**
  * Porta Calcestruzzi (§ 11.2.5). Due schede: Registro (import + tabella, M2) e
@@ -74,6 +75,15 @@ export function ClsPage() {
         >
           Controlli di accettazione
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={scheda === 'schede'}
+          className={`${styles.tab} ${scheda === 'schede' ? styles.tabAttiva : ''}`}
+          onClick={() => setScheda('schede')}
+        >
+          Schede export
+        </button>
       </div>
 
       <CartellaLavoro />
@@ -85,8 +95,10 @@ export function ClsPage() {
           <ImportRegistro />
           <TabellaPrelievi />
         </>
-      ) : (
+      ) : scheda === 'controlli' ? (
         <ControlliView />
+      ) : (
+        <SchedeView />
       )}
     </section>
   );

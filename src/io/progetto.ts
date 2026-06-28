@@ -16,9 +16,10 @@
  * banale da ritrovare senza conoscere il nome della commessa. Predisposto per
  * l'acciaio (sezione `acciaio` futura) senza implementarlo ora.
  */
-import type { ControlloSalvato, Prelievo } from '../core/index.ts';
+import type { ControlloSalvato, Prelievo, SchedaExport } from '../core/index.ts';
 import { caricaTuttiControlli, salvaControllo, svuotaControlli } from './controlli.ts';
 import { caricaTuttiPrelieviCls, salvaPrelieviCls, svuotaPrelieviCls } from './importa.ts';
+import { caricaSchede, salvaSchede } from './schede.ts';
 import { leggiJson, scriviJson, VERSIONE_CACHE, type HandleCartella } from './workspace.ts';
 
 export const SCHEMA_PROGETTO = 'kerios-progetto/1';
@@ -35,6 +36,7 @@ export interface ProgettoKerios {
   cls: {
     prelievi: Prelievo[]; // snapshot del registro (cache rigenerabile dalla verità)
     controlli: ControlloSalvato[];
+    schede: SchedaExport[]; // schede di export ST36 + stato esportato
   };
   // acciaio: predisposto (non in M4)
 }
@@ -43,6 +45,7 @@ export interface OpzioniProgetto {
   commessa: string;
   prelievi: readonly Prelievo[];
   controlli: readonly ControlloSalvato[];
+  schede: readonly SchedaExport[];
   aggiornato: string; // ISO, dato dalla UI
   creato?: string; // ISO; default = aggiornato (prima scrittura)
 }
@@ -58,6 +61,7 @@ export function costruisciProgetto(opts: OpzioniProgetto): ProgettoKerios {
     cls: {
       prelievi: [...opts.prelievi],
       controlli: [...opts.controlli],
+      schede: [...opts.schede],
     },
   };
 }
@@ -93,6 +97,7 @@ export function validaProgetto(raw: unknown): ProgettoKerios {
     cls: {
       prelievi: (o.cls?.prelievi ?? []).map(migraPrelievo),
       controlli: o.cls?.controlli ?? [],
+      schede: o.cls?.schede ?? [], // progetti pre-schede → []
     },
   };
 }
@@ -128,12 +133,14 @@ export async function caricaProgettoDaCartella(
 export async function statoCacheCls(): Promise<{
   prelievi: Prelievo[];
   controlli: ControlloSalvato[];
+  schede: SchedaExport[];
 }> {
-  const [prelievi, controlli] = await Promise.all([
+  const [prelievi, controlli, schede] = await Promise.all([
     caricaTuttiPrelieviCls(),
     caricaTuttiControlli(),
+    caricaSchede(),
   ]);
-  return { prelievi, controlli };
+  return { prelievi, controlli, schede };
 }
 
 /**
@@ -145,4 +152,5 @@ export async function applicaProgettoACache(p: ProgettoKerios): Promise<void> {
   await salvaPrelieviCls([...p.cls.prelievi]);
   await svuotaControlli();
   for (const c of p.cls.controlli) await salvaControllo(c);
+  await salvaSchede(p.cls.schede);
 }

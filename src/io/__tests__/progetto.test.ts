@@ -74,7 +74,13 @@ const asDir = (d: FakeDir) => d as unknown as HandleCartella;
 describe('progetto — schema reale e validazione', () => {
   it('costruisciProgetto usa lo schema corrente e copia gli array (snapshot)', () => {
     const prelievi = [prelievo('p1')];
-    const p = costruisciProgetto({ commessa: 'C', prelievi, controlli: [], aggiornato: GEN });
+    const p = costruisciProgetto({
+      commessa: 'C',
+      prelievi,
+      controlli: [],
+      schede: [],
+      aggiornato: GEN,
+    });
     expect(p.schema).toBe(SCHEMA_PROGETTO);
     expect(p.creato).toBe(GEN); // default = aggiornato alla prima scrittura
     prelievi.push(prelievo('p2')); // muto l'origine
@@ -105,6 +111,7 @@ describe('progetto — schema reale e validazione', () => {
       commessa: 'C',
       prelievi: [prelievo('p1')],
       controlli: [controllo('k1', ['p1'])],
+      schede: [],
       aggiornato: GEN,
     });
     expect(validaProgetto(JSON.parse(serializzaProgetto(p)))).toEqual(p);
@@ -115,6 +122,7 @@ describe('progetto — IO su cartella + ponte cache', () => {
   beforeEach(async () => {
     await db.prelieviCls.clear();
     await db.controlliCls.clear();
+    await db.schedeExport.clear();
   });
 
   it('salva su cartella scrive progetto.kerios.json e si rilegge uguale', async () => {
@@ -123,6 +131,7 @@ describe('progetto — IO su cartella + ponte cache', () => {
       commessa: dir.name,
       prelievi: [prelievo('p1'), prelievo('p2')],
       controlli: [controllo('k1', ['p1', 'p2'])],
+      schede: [],
       aggiornato: GEN,
     });
     // il file esiste col nome fisso
@@ -144,6 +153,7 @@ describe('progetto — IO su cartella + ponte cache', () => {
       commessa: 'C',
       prelievi: [prelievo('p1'), prelievo('p2'), prelievo('p3')],
       controlli: [controllo('k1', ['p1', 'p2', 'p3'])],
+      schede: [],
       aggiornato: GEN,
     });
     await applicaProgettoACache(p);
@@ -157,11 +167,12 @@ describe('progetto — IO su cartella + ponte cache', () => {
     await db.prelieviCls.bulkPut([prelievo('p1'), prelievo('p2')]);
     await db.controlliCls.put(controllo('k1', ['p1', 'p2']));
     const dir = new FakeDir('C');
-    const { prelievi, controlli } = await statoCacheCls();
+    const { prelievi, controlli, schede } = await statoCacheCls();
     await salvaProgettoSuCartella(asDir(dir), {
       commessa: 'C',
       prelievi,
       controlli,
+      schede,
       aggiornato: GEN,
     });
     // simulo chiusura: svuoto la cache
