@@ -121,6 +121,8 @@ export interface ControlloSalvato {
   rckEffettiva?: number; // solo Tipo A
   forzato: boolean; // l'utente ha confermato nonostante avvisi
   generato: string; // ISO timestamp
+  /** OPERA specifica del controllo, testo libero (es. "TOMBINO SCATOLARE TO59 - pk 7+624"). */
+  opera?: string;
   /** PDF del documento di controllo ST36 (generato in M6), in pdf/. M5: solo il campo. */
   documentoControllo?: string;
 }

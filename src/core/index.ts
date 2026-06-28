@@ -12,3 +12,4 @@ export * from './contratto.ts';
 export * from './tipi-cls.ts';
 export * from './soglie.ts';
 export * from './sigle.ts';
+export * from './profilo.ts';

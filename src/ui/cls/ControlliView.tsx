@@ -22,12 +22,15 @@ import { formattaNumeroIt } from '../../io/formato.ts';
 import { useStore } from '../../stato/store.ts';
 import { GruppoControllo } from './GruppoControllo.tsx';
 import { EsitoBadge } from '../comuni/EsitoBadge.tsx';
+import { IntestazioneCantiere } from '../comuni/IntestazioneCantiere.tsx';
 import styles from './ControlliView.module.css';
 
 interface GruppoState {
   id: string;
   prelieviIds: string[];
   tipo?: TipoControllo;
+  /** OPERA specifica del controllo (testo libero), salvata sul ControlloSalvato. */
+  opera?: string;
 }
 
 const STRATEGIE: { modo: ModoRaggruppamento; nome: string; desc: string }[] = [
@@ -129,6 +132,7 @@ export function ControlliView() {
       generato: new Date().toISOString(),
       soglie,
       ...(g.tipo ? { tipo: g.tipo } : {}),
+      ...(g.opera?.trim() ? { opera: g.opera.trim() } : {}),
     });
     await salvaControllo(c);
     segnaSporco(); // modifica non ancora versata nel progetto
@@ -164,6 +168,7 @@ export function ControlliView() {
 
   return (
     <section aria-labelledby="ctr-titolo">
+      <IntestazioneCantiere />
       <h2 id="ctr-titolo" className={styles.titolo}>
         Controlli di accettazione
       </h2>
@@ -228,7 +233,9 @@ export function ControlliView() {
           assegnati={assegnati}
           soglie={soglie}
           tipoForzato={g.tipo}
+          opera={g.opera ?? ''}
           presenze={presenze}
+          onSetOpera={(opera) => aggiorna(g.id, (x) => ({ ...x, opera }))}
           onRimuovi={(id) =>
             aggiorna(g.id, (x) => ({ ...x, prelieviIds: x.prelieviIds.filter((y) => y !== id) }))
           }

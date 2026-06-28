@@ -47,6 +47,16 @@ describe('costruisciControlloSalvato — SNAPSHOT fedele (no riferimenti condivi
     const c = costruisciControlloSalvato(gruppiPieni[1], { generato: GEN });
     expect(c.id).not.toBe(a.id); // insieme diverso → chiave diversa
   });
+
+  it('OPERA (testo libero) salvata sul controllo quando presente', () => {
+    const con = costruisciControlloSalvato(gruppiPieni[0], {
+      generato: GEN,
+      opera: 'TOMBINO SCATOLARE TO59 - pk 7+624',
+    });
+    expect(con.opera).toBe('TOMBINO SCATOLARE TO59 - pk 7+624');
+    const senza = costruisciControlloSalvato(gruppiPieni[0], { generato: GEN });
+    expect(senza.opera).toBeUndefined();
+  });
 });
 
 describe('round-trip IndexedDB: ogni controllo conserva i SUOI valori + idempotenza per CONTENUTO', () => {

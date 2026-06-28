@@ -62,6 +62,7 @@ export function controlloCompleto(r: RisultatoControllo, soglie: Soglie = SOGLIE
 
 export interface OpzioniSnapshot extends OpzioniCalcolo {
   generato: string; // ISO (passato da fuori: il dominio non legge l'orologio)
+  opera?: string; // OPERA specifica del controllo (testo libero), salvata sul controllo
 }
 
 /**
@@ -106,5 +107,6 @@ export function costruisciControlloSalvato(
   const mix = prelievi[0]?.mix;
   if (mix) c.mix = mix;
   if (r.rckEffettiva != null) c.rckEffettiva = r.rckEffettiva;
+  if (opts.opera) c.opera = opts.opera;
   return c;
 }

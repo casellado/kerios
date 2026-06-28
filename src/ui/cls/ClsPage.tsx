@@ -5,9 +5,11 @@ import { caricaTuttiPrelieviCls } from '../../io/importa.ts';
 import { allineaVersioneCache } from '../../io/workspace.ts';
 import { useStore } from '../../stato/store.ts';
 import { CartellaLavoro } from './CartellaLavoro.tsx';
+import { AnagraficaCantiere } from './AnagraficaCantiere.tsx';
 import { ImportRegistro } from './ImportRegistro.tsx';
 import { TabellaPrelievi } from './TabellaPrelievi.tsx';
 import { ControlliView } from './ControlliView.tsx';
+import { IntestazioneCantiere } from '../comuni/IntestazioneCantiere.tsx';
 import styles from './ClsPage.module.css';
 
 type Scheda = 'registro' | 'controlli';
@@ -75,9 +77,11 @@ export function ClsPage() {
       </div>
 
       <CartellaLavoro />
+      <AnagraficaCantiere />
 
       {scheda === 'registro' ? (
         <>
+          <IntestazioneCantiere />
           <ImportRegistro />
           <TabellaPrelievi />
         </>

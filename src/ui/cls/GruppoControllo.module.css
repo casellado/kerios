@@ -46,6 +46,35 @@
   color: var(--bad);
 }
 
+.operaRiga {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.operaLbl {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  flex: none;
+}
+.operaInput {
+  font: inherit;
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.operaInput:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .tipoRiga {
   display: flex;
   flex-wrap: wrap;

@@ -1,0 +1,67 @@
+.box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.titolo {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.aiuto {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.area {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  resize: vertical;
+  min-height: 64px;
+}
+.area:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.azioni {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.salva {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--steel);
+  color: #fff;
+  cursor: pointer;
+}
+.salva:hover {
+  background: var(--steel-700);
+}
+.salva:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.stato {
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--ok);
+}
+.errore {
+  color: var(--bad);
+}

@@ -19,6 +19,7 @@ import {
   statoCacheCls,
   validaProgetto,
 } from '../../io/progetto.ts';
+import { caricaProfilo } from '../../io/profilo.ts';
 import { useStore } from '../../stato/store.ts';
 import { DialogModifiche } from '../comuni/DialogModifiche.tsx';
 import styles from './CartellaLavoro.module.css';
@@ -37,6 +38,7 @@ export function CartellaLavoro() {
   const sporco = useStore((s) => s.sporco);
   const segnaPulito = useStore((s) => s.segnaPulito);
   const setCartella = useStore((s) => s.setCartella);
+  const setIntestazione = useStore((s) => s.setIntestazione);
   const inputId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -72,6 +74,9 @@ export function CartellaLavoro() {
 
   /** Eredita il progetto dalla cartella → rigenera la cache → notifica le viste. */
   async function ereditaDa(dir: HandleCartella): Promise<void> {
+    // intestazione cantiere dal profilo (assente/vecchio → vuota, nessun blocco)
+    const profilo = await caricaProfilo(dir);
+    setIntestazione(profilo?.intestazione ?? '');
     const progetto = await caricaProgettoDaCartella(dir);
     if (progetto) {
       await applicaProgettoACache(progetto);
@@ -194,6 +199,7 @@ export function CartellaLavoro() {
     await dimenticaHandleCommessa();
     setHandle(null);
     setCartella(null);
+    setIntestazione('');
     setDaRiaprire(null);
     avvisa('Cartella scollegata. La cache resta finché non la ricarichi o reimporti.');
   }

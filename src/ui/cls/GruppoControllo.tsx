@@ -26,8 +26,11 @@ interface Props {
   assegnati: Set<string>;
   soglie: Soglie;
   tipoForzato: TipoControllo | undefined;
+  /** OPERA specifica del controllo (testo libero), salvata sul ControlloSalvato. */
+  opera?: string;
   /** presenza documenti per WBS (per il semaforo dei link ereditati dal registro). */
   presenze?: Map<string, PresenzaWbs>;
+  onSetOpera: (opera: string) => void;
   onRimuovi: (id: string) => void;
   onAggiungi: (id: string) => void;
   onSetTipo: (t: TipoControllo | undefined) => void;
@@ -147,6 +150,21 @@ export function GruppoControllo(props: Props) {
           Elimina gruppo
         </button>
       </header>
+
+      {/* OPERA specifica del controllo (testo libero) — sotto l'intestazione
+          cantiere; viene salvata sul ControlloSalvato (servirà al doc ST36 M6). */}
+      {!vuoto && (
+        <label className={styles.operaRiga}>
+          <span className={styles.operaLbl}>Opera</span>
+          <input
+            type="text"
+            className={styles.operaInput}
+            value={props.opera ?? ''}
+            placeholder="es. TOMBINO SCATOLARE TO59 - pk 7+624"
+            onChange={(e) => props.onSetOpera(e.target.value)}
+          />
+        </label>
+      )}
 
       {/* Tipo suggerito + forzatura (solo per gruppi non vuoti). */}
       {!vuoto && (

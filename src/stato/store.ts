@@ -31,6 +31,14 @@ interface StatoApp {
   setCartella: (h: HandleCartella | null) => void;
 
   /**
+   * Intestazione del cantiere a TESTO LIBERO (dal profilo-commessa): mostrata in
+   * cima al registro e al controllo. Caricata dal profilo al collegamento della
+   * cartella; modificabile dall'anagrafica e salvata nel profilo.
+   */
+  intestazione: string;
+  setIntestazione: (t: string) => void;
+
+  /**
    * Contatore di REVISIONE della cache (M4): lo si incrementa quando la cache
    * IndexedDB cambia fuori dal normale flusso (collegamento cartella, ricarica
    * dalla cartella, invalidazione versione). Le viste lo usano come dipendenza
@@ -66,6 +74,9 @@ export const useStore = create<StatoApp>((set) => ({
 
   cartella: null,
   setCartella: (cartella) => set({ cartella }),
+
+  intestazione: '',
+  setIntestazione: (intestazione) => set({ intestazione }),
 
   revisioneDati: 0,
   ricarica: () => set((s) => ({ revisioneDati: s.revisioneDati + 1 })),
