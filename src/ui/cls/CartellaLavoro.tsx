@@ -46,8 +46,9 @@ export function CartellaLavoro() {
   const [messaggio, setMessaggio] = useState('');
   const [tono, setTono] = useState<Tono>('info');
   const [occupato, setOccupato] = useState(false);
-  // dialog "modifiche non salvate" prima di scollegare (solo se sporco)
-  const [chiediScollega, setChiediScollega] = useState(false);
+  // dialog "modifiche non salvate" prima di un'azione che scarta la cache sporca
+  // (scollega o ricarica). null = nessuna conferma in corso.
+  const [conferma, setConferma] = useState<'scollega' | 'ricarica' | null>(null);
 
   function avvisa(testo: string, t: Tono = 'info') {
     setMessaggio(testo);
@@ -168,7 +169,8 @@ export function CartellaLavoro() {
     }
   }
 
-  async function ricaricaDallaCartella() {
+  /** Ricarica effettiva dalla cartella (scarta la cache, rilegge la verità). */
+  async function eseguiRicarica() {
     if (!handle) return;
     setOccupato(true);
     try {
@@ -192,23 +194,30 @@ export function CartellaLavoro() {
     avvisa('Cartella scollegata. La cache resta finché non la ricarichi o reimporti.');
   }
 
-  /** Richiesta di scollegamento: se ci sono modifiche non salvate, chiede prima. */
-  function scollega() {
+  /**
+   * Esegue l'azione che scarta la cache sporca. Se ci sono modifiche non salvate
+   * chiede prima conferma (DialogModifiche); altrimenti procede diretto.
+   * `ricarica` e `scollega` corrono lo STESSO rischio → protezione uniforme.
+   */
+  function richiediAzione(azione: 'scollega' | 'ricarica') {
     if (sporco) {
-      setChiediScollega(true);
+      setConferma(azione);
       return;
     }
-    void eseguiScollega();
+    void (azione === 'scollega' ? eseguiScollega() : eseguiRicarica());
   }
 
-  async function salvaEScollega() {
-    setChiediScollega(false);
-    if (await salva()) await eseguiScollega(); // se il salvataggio fallisce, NON scollega
+  async function confermaSalvaEProcedi() {
+    const azione = conferma;
+    setConferma(null);
+    if (!(await salva())) return; // se il salvataggio fallisce, NON si procede
+    await (azione === 'scollega' ? eseguiScollega() : eseguiRicarica());
   }
 
-  function scollegaSenzaSalvare() {
-    setChiediScollega(false);
-    void eseguiScollega();
+  function confermaProcediSenzaSalvare() {
+    const azione = conferma;
+    setConferma(null);
+    void (azione === 'scollega' ? eseguiScollega() : eseguiRicarica());
   }
 
   // --- Fallback senza File System Access: progetto come file .json ----------
@@ -287,7 +296,7 @@ export function CartellaLavoro() {
                 type="button"
                 className={styles.secondario}
                 disabled={occupato}
-                onClick={() => void ricaricaDallaCartella()}
+                onClick={() => richiediAzione('ricarica')}
               >
                 Ricarica dalla cartella
               </button>
@@ -295,7 +304,7 @@ export function CartellaLavoro() {
                 type="button"
                 className={styles.tenue}
                 disabled={occupato}
-                onClick={() => void scollega()}
+                onClick={() => richiediAzione('scollega')}
               >
                 Scollega
               </button>
@@ -317,7 +326,7 @@ export function CartellaLavoro() {
                 type="button"
                 className={styles.tenue}
                 disabled={occupato}
-                onClick={() => void scollega()}
+                onClick={() => void eseguiScollega()}
               >
                 Dimentica
               </button>
@@ -365,12 +374,12 @@ export function CartellaLavoro() {
         {messaggio}
       </p>
 
-      {chiediScollega && (
+      {conferma && (
         <DialogModifiche
-          azione="scollegare"
-          onSalvaEProcedi={() => void salvaEScollega()}
-          onProcediSenzaSalvare={scollegaSenzaSalvare}
-          onAnnulla={() => setChiediScollega(false)}
+          azione={conferma === 'scollega' ? 'scollegare' : 'ricaricare'}
+          onSalvaEProcedi={() => void confermaSalvaEProcedi()}
+          onProcediSenzaSalvare={confermaProcediSenzaSalvare}
+          onAnnulla={() => setConferma(null)}
         />
       )}
     </section>

@@ -39,4 +39,13 @@ describe('store — flag SPORCO (modifiche non salvate, M4 micro-fix)', () => {
     stato().segnaSporco();
     expect(stato().sporco).toBe(true);
   });
+
+  it('PASSO 0: "Ricarica dalla cartella" usa lo stesso flag (scarta la cache sporca)', () => {
+    // ricarica e scollega corrono lo stesso rischio → stessa protezione
+    expect(stato().sporco).toBe(false); // pulito ⇒ ricarica diretta
+    stato().segnaSporco();
+    expect(stato().sporco).toBe(true); // sporco ⇒ DialogModifiche su "ricaricare"
+    stato().segnaPulito();
+    expect(stato().sporco).toBe(false); // dopo "Salva e ricarica" ⇒ niente avviso
+  });
 });

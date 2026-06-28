@@ -26,6 +26,9 @@ export function DialogModifiche({
   const descrId = useId();
   const primarioRef = useRef<HTMLButtonElement>(null);
   const origineRef = useRef<Element | null>(null);
+  // imperativo per i pulsanti ("scollegare" → "scollega", "ricaricare" → "ricarica");
+  // l'infinito `azione` resta nella frase ("…prima di scollegare?").
+  const imperativo = azione.replace(/re$/, '');
 
   useEffect(() => {
     origineRef.current = document.activeElement;
@@ -66,10 +69,10 @@ export function DialogModifiche({
             className={styles.primario}
             onClick={onSalvaEProcedi}
           >
-            Salva e {azione}
+            Salva e {imperativo}
           </button>
           <button type="button" className={styles.distruttivo} onClick={onProcediSenzaSalvare}>
-            {azione[0].toUpperCase() + azione.slice(1)} senza salvare
+            {imperativo[0].toUpperCase() + imperativo.slice(1)} senza salvare
           </button>
           <button type="button" className={styles.tenue} onClick={onAnnulla}>
             Annulla
