@@ -17,6 +17,7 @@ import {
   eliminaControllo,
   svuotaControlli,
 } from '../../io/controlli.ts';
+import { presenzaDocCls, type PresenzaWbs } from '../../io/documenti.ts';
 import { formattaNumeroIt } from '../../io/formato.ts';
 import { useStore } from '../../stato/store.ts';
 import { GruppoControllo } from './GruppoControllo.tsx';
@@ -50,11 +51,13 @@ function uid(): string {
 export function ControlliView() {
   const prelievi = useStore((s) => s.prelievi);
   const soglie = useStore((s) => s.soglie);
+  const cartella = useStore((s) => s.cartella);
   const revisioneDati = useStore((s) => s.revisioneDati);
   const segnaSporco = useStore((s) => s.segnaSporco);
   const [modo, setModo] = useState<ModoRaggruppamento | ''>('');
   const [gruppi, setGruppi] = useState<GruppoState[]>([]);
   const [salvati, setSalvati] = useState<ControlloSalvato[]>([]);
+  const [presenze, setPresenze] = useState<Map<string, PresenzaWbs>>(new Map());
 
   // ricarica i salvati al montaggio e quando la cache cambia (collegamento/
   // ricarica dalla cartella, invalidazione versione — M4).
@@ -67,6 +70,24 @@ export function ControlliView() {
       on = false;
     };
   }, [revisioneDati]);
+
+  // mappa di presenza documenti per WBS (semaforo dei link ereditati nelle schede).
+  useEffect(() => {
+    if (!cartella) {
+      setPresenze(new Map());
+      return;
+    }
+    let attivo = true;
+    const wbsUniche = [...new Set(prelievi.map((p) => p.wbs).filter(Boolean))];
+    void (async () => {
+      const m = new Map<string, PresenzaWbs>();
+      for (const w of wbsUniche) m.set(w, await presenzaDocCls(cartella, w));
+      if (attivo) setPresenze(m);
+    })();
+    return () => {
+      attivo = false;
+    };
+  }, [cartella, prelievi, revisioneDati]);
 
   const byId = useMemo(() => new Map(prelievi.map((p) => [p.id, p])), [prelievi]);
   const refert = useMemo(() => prelievi.filter(refertato), [prelievi]);
@@ -207,6 +228,7 @@ export function ControlliView() {
           assegnati={assegnati}
           soglie={soglie}
           tipoForzato={g.tipo}
+          presenze={presenze}
           onRimuovi={(id) =>
             aggiorna(g.id, (x) => ({ ...x, prelieviIds: x.prelieviIds.filter((y) => y !== id) }))
           }

@@ -1,9 +1,14 @@
+/* La scheda-controllo esce dalla fascia centrale (App .main max-width:1040px) e va
+   a TUTTA LARGHEZZA, come il registro: con 14 colonne (layout ST36) serve spazio. */
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
   margin-bottom: 16px;
+  box-sizing: border-box;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 .testa {
@@ -76,23 +81,61 @@
   border-radius: 999px;
 }
 
+.scrollTab {
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
 .prelievi {
-  width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  margin-bottom: 12px;
+  background: var(--surface);
 }
 .prelievi th,
 .prelievi td {
   padding: 6px 10px;
   border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
   text-align: left;
+  white-space: nowrap;
 }
 .prelievi thead th {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
+  background: var(--paper);
+}
+/* fasce di testata unite (PRELIEVO CAMPIONE / PARTE DI OPERA / …) come l'ST36 */
+.bande th {
+  text-align: center;
+  font-weight: 700;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--steel) 8%, var(--paper));
+  border-bottom: 1px solid var(--line);
+}
+.parte {
+  white-space: normal;
+  min-width: 160px;
+  max-width: 260px;
+}
+/* colonne del CONTROLLO (Rmin/Rm/Rck eff), unite per terzina: in risalto */
+.ctrl {
+  text-align: center;
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--steel) 6%, var(--surface));
+  border-left: 1px solid var(--line);
+  font-size: 14px;
+}
+.ctrlB,
+.ctrlAperto {
+  white-space: normal;
+  font-family: inherit;
+  color: var(--ink-soft);
+}
+.ctrlAperto {
+  background: var(--line-soft);
 }
 .num {
   font-family: var(--mono);

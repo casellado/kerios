@@ -8,9 +8,13 @@ import {
   resistenzaPrelievo,
   prelieviCompatibili,
   parseDataIt,
+  descriviPrelievo,
 } from '../../domain/index.ts';
+import type { PresenzaWbs } from '../../io/documenti.ts';
 import { formattaNumeroIt } from '../../io/formato.ts';
 import { EsitoBadge } from '../comuni/EsitoBadge.tsx';
+import { ScrollOrizzontale } from '../comuni/ScrollOrizzontale.tsx';
+import { LinkDocumento } from './LinkDocumento.tsx';
 import styles from './GruppoControllo.module.css';
 
 interface Props {
@@ -22,6 +26,8 @@ interface Props {
   assegnati: Set<string>;
   soglie: Soglie;
   tipoForzato: TipoControllo | undefined;
+  /** presenza documenti per WBS (per il semaforo dei link ereditati dal registro). */
+  presenze?: Map<string, PresenzaWbs>;
   onRimuovi: (id: string) => void;
   onAggiungi: (id: string) => void;
   onSetTipo: (t: TipoControllo | undefined) => void;
@@ -49,6 +55,7 @@ export function GruppoControllo(props: Props) {
   const completo = controlloCompleto(r, soglie);
   const omog = useMemo(() => verificaOmogeneita(prelievi), [prelievi]);
   const vuoto = prelievi.length === 0;
+  const pres = (wbs: string) => props.presenze?.get(wbs) ?? null;
 
   // avvisi NORMALI (superabili): esclusi omogeneità (banner forte) e n<minimo (stato incompleto)
   const avvisi = useMemo(() => {
@@ -86,6 +93,35 @@ export function GruppoControllo(props: Props) {
   }
 
   const mancanti = Math.max(0, soglie.cls.nPrelieviTipoAMin - r.n);
+
+  // Celle Rmin/Rm/Rck eff UNITE sulla terzina (rowSpan), come le merge M/N/O
+  // dell'ST36: i valori del controllo (dal calcolo esistente, engine intatto)
+  // appaiono una sola volta per gruppo, allineati ai suoi prelievi.
+  const n = prelievi.length;
+  const controlloCelle = completo ? (
+    r.tipo === 'A' ? (
+      <>
+        <td rowSpan={n} className={`${styles.num} ${styles.ctrl}`}>
+          {fmt(r.rcmin)}
+        </td>
+        <td rowSpan={n} className={`${styles.num} ${styles.ctrl}`}>
+          {fmt(r.rcm28)}
+        </td>
+        <td rowSpan={n} className={`${styles.num} ${styles.ctrl} ${styles.evidenza}`}>
+          {fmt(r.rckEffettiva)}
+        </td>
+      </>
+    ) : (
+      <td colSpan={3} rowSpan={n} className={`${styles.ctrl} ${styles.ctrlB}`}>
+        Tipo B · s {fmt(r.s)} · CV {formattaNumeroIt(r.cv, 3)} · R<sub>m</sub> {fmt(r.rcm28)} · R
+        <sub>min</sub> {fmt(r.rcmin)}
+      </td>
+    )
+  ) : (
+    <td colSpan={3} rowSpan={n} className={`${styles.ctrl} ${styles.ctrlAperto}`}>
+      Controllo aperto — {mancanti} preliev{mancanti === 1 ? 'o' : 'i'} al minimo
+    </td>
+  );
 
   return (
     <article className={styles.card} aria-label={`Controllo ${indice}`}>
@@ -125,54 +161,118 @@ export function GruppoControllo(props: Props) {
         </div>
       )}
 
-      {/* Prelievi del gruppo (editabili). */}
-      <table className={styles.prelievi}>
-        <caption className={styles.srOnly}>Prelievi del controllo {indice}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Verbale</th>
-            <th scope="col">Mix</th>
-            <th scope="col">Data</th>
-            <th scope="col" className={styles.num}>
-              Rck
-            </th>
-            <th scope="col" className={styles.num}>
-              R medio
-            </th>
-            <th scope="col" />
-          </tr>
-        </thead>
-        <tbody>
-          {prelievi.map((p) => (
-            <tr key={p.id}>
-              <th scope="row" className={styles.code}>
-                {p.verbale}
+      {/* Prelievi del gruppo (editabili) — layout ST36: stesse colonne e ordine,
+          Rmin/Rm/Rck eff uniti per terzina. La GENERAZIONE del documento è M6. */}
+      <ScrollOrizzontale className={styles.scrollTab}>
+        <table className={styles.prelievi}>
+          <caption className={styles.srOnly}>
+            Controllo {indice} — prelievi e risultati (layout ST36)
+          </caption>
+          <thead>
+            <tr className={styles.bande}>
+              <th colSpan={3} scope="colgroup">
+                Prelievo campione
               </th>
-              <td className={styles.code}>{p.mix}</td>
-              <td>{p.data}</td>
-              <td className={styles.num}>{fmt(p.rck)}</td>
-              <td className={styles.num}>{fmt(resistenzaPrelievo(p))}</td>
-              <td className={styles.num}>
-                <button
-                  type="button"
-                  className={styles.togli}
-                  onClick={() => props.onRimuovi(p.id)}
-                  aria-label={`Togli ${p.verbale} dal controllo ${indice}`}
-                >
-                  Togli
-                </button>
-              </td>
+              <th scope="col">Parte di opera</th>
+              <th scope="col">Laboratorio</th>
+              <th colSpan={6} scope="colgroup">
+                Risultati delle prove
+              </th>
+              <th colSpan={3} scope="colgroup">
+                Controllo «Tipo {r.tipo}»
+              </th>
+              <th aria-hidden="true" />
             </tr>
-          ))}
-          {vuoto && (
             <tr>
-              <td colSpan={6} className={styles.vuoto}>
-                Nessun prelievo. Aggiungine dal menu sotto.
-              </td>
+              <th scope="col">Data</th>
+              <th scope="col" className={styles.num}>
+                Rck
+              </th>
+              <th scope="col">Verbale</th>
+              <th scope="col">Parte d'opera</th>
+              <th scope="col">Laboratorio</th>
+              <th scope="col">Certificato</th>
+              <th scope="col">Data prova</th>
+              <th scope="col" className={styles.num}>
+                Rott. a gg.
+              </th>
+              <th scope="col" className={styles.num}>
+                R1
+              </th>
+              <th scope="col" className={styles.num}>
+                R2
+              </th>
+              <th scope="col" className={styles.num}>
+                R
+              </th>
+              <th scope="col" className={styles.num}>
+                R<sub>min</sub>
+              </th>
+              <th scope="col" className={styles.num}>
+                R<sub>m</sub>
+              </th>
+              <th scope="col" className={styles.num}>
+                R<sub>ck</sub> eff.
+              </th>
+              <th scope="col" />
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {prelievi.map((p, i) => {
+              const vp = descriviPrelievo(p, soglie);
+              return (
+                <tr key={p.id}>
+                  <td>{p.data}</td>
+                  <td className={styles.num}>{fmt(p.rck)}</td>
+                  <th scope="row" className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="verbale"
+                      campo="verbaleFile"
+                      valore={p.verbale}
+                      presenza={pres(p.wbs)}
+                    />
+                  </th>
+                  <td className={styles.parte}>{p.parte}</td>
+                  <td>{p.laboratorio ?? '—'}</td>
+                  <td className={styles.code}>
+                    <LinkDocumento
+                      prelievo={p}
+                      tipo="certificato"
+                      campo="certificatoFile"
+                      valore={p.certificato}
+                      presenza={pres(p.wbs)}
+                    />
+                  </td>
+                  <td>{p.dataProva ?? '—'}</td>
+                  <td className={styles.num}>{vp.stagionaturaGg ?? '—'}</td>
+                  <td className={styles.num}>{fmt(p.r1)}</td>
+                  <td className={styles.num}>{fmt(p.r2)}</td>
+                  <td className={styles.num}>{fmt(resistenzaPrelievo(p))}</td>
+                  {i === 0 && controlloCelle}
+                  <td className={styles.num}>
+                    <button
+                      type="button"
+                      className={styles.togli}
+                      onClick={() => props.onRimuovi(p.id)}
+                      aria-label={`Togli ${p.verbale} dal controllo ${indice}`}
+                    >
+                      Togli
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+            {vuoto && (
+              <tr>
+                <td colSpan={15} className={styles.vuoto}>
+                  Nessun prelievo. Aggiungine dal menu sotto.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </ScrollOrizzontale>
 
       {/* Menu AGGIUNGI: solo prelievi compatibili + ricerca (scala). */}
       <div className={styles.aggiungiBox}>
@@ -221,41 +321,9 @@ export function GruppoControllo(props: Props) {
         </p>
       )}
 
-      {/* COMPLETO: risultato NTC + esito. */}
+      {/* COMPLETO: verifica NTC (i numeri Rmin/Rm/Rck eff sono in tabella). */}
       {!vuoto && completo && (
         <div className={styles.risultato}>
-          <dl className={styles.griglia}>
-            <div>
-              <dt>n prelievi</dt>
-              <dd className={styles.num}>{r.n}</dd>
-            </div>
-            <div>
-              <dt>Rcm,28</dt>
-              <dd className={styles.num}>{fmt(r.rcm28)}</dd>
-            </div>
-            <div>
-              <dt>Rc,min</dt>
-              <dd className={styles.num}>{fmt(r.rcmin)}</dd>
-            </div>
-            {r.tipo === 'A' ? (
-              <div>
-                <dt>Rck effettiva</dt>
-                <dd className={`${styles.num} ${styles.evidenza}`}>{fmt(r.rckEffettiva)}</dd>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <dt>s (n−1)</dt>
-                  <dd className={styles.num}>{fmt(r.s)}</dd>
-                </div>
-                <div>
-                  <dt>CV</dt>
-                  <dd className={styles.num}>{formattaNumeroIt(r.cv, 3)}</dd>
-                </div>
-              </>
-            )}
-          </dl>
-
           <ul className={styles.disug}>
             <li className={r.disug1.ok ? styles.ok : styles.no}>
               {r.disug1.ok ? '✓' : '✕'} Disug. 1: {fmt(r.disug1.valore)} ≥ {fmt(r.disug1.richiesto)}
