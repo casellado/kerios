@@ -20,6 +20,7 @@ import {
   validaProgetto,
 } from '../../io/progetto.ts';
 import { useStore } from '../../stato/store.ts';
+import { DialogModifiche } from '../comuni/DialogModifiche.tsx';
 import styles from './CartellaLavoro.module.css';
 
 type Tono = 'info' | 'ok' | 'errore';
@@ -33,6 +34,8 @@ type Tono = 'info' | 'ok' | 'errore';
  */
 export function CartellaLavoro() {
   const ricarica = useStore((s) => s.ricarica);
+  const sporco = useStore((s) => s.sporco);
+  const segnaPulito = useStore((s) => s.segnaPulito);
   const inputId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -43,6 +46,8 @@ export function CartellaLavoro() {
   const [messaggio, setMessaggio] = useState('');
   const [tono, setTono] = useState<Tono>('info');
   const [occupato, setOccupato] = useState(false);
+  // dialog "modifiche non salvate" prima di scollegare (solo se sporco)
+  const [chiediScollega, setChiediScollega] = useState(false);
 
   function avvisa(testo: string, t: Tono = 'info') {
     setMessaggio(testo);
@@ -69,6 +74,7 @@ export function CartellaLavoro() {
     if (progetto) {
       await applicaProgettoACache(progetto);
       ricarica();
+      segnaPulito(); // appena ereditato: la cache combacia con la cartella-verità
       avvisa(
         `Collegata «${dir.name}» · ereditati ${progetto.cls.prelievi.length} prelievi e ${progetto.cls.controlli.length} controlli.`,
         'ok',
@@ -132,13 +138,14 @@ export function CartellaLavoro() {
     }
   }
 
-  async function salva() {
-    if (!handle) return;
+  /** Salva nel progetto. Ritorna true se è andato a buon fine. */
+  async function salva(): Promise<boolean> {
+    if (!handle) return false;
     setOccupato(true);
     try {
       if (!(await assicuraPermesso(handle))) {
         avvisa('Permesso negato in scrittura: riprova il consenso.', 'errore');
-        return;
+        return false;
       }
       const { prelievi, controlli } = await statoCacheCls();
       const p = await salvaProgettoSuCartella(handle, {
@@ -147,12 +154,15 @@ export function CartellaLavoro() {
         controlli,
         aggiornato: new Date().toISOString(),
       });
+      segnaPulito(); // dati versati nella cartella-verità
       avvisa(
         `Salvato in «${handle.name}» · ${p.cls.prelievi.length} prelievi, ${p.cls.controlli.length} controlli. Copialo nella verità OneDrive quando hai finito la WBS.`,
         'ok',
       );
+      return true;
     } catch (e) {
       avvisa(`Errore di salvataggio: ${e instanceof Error ? e.message : String(e)}`, 'errore');
+      return false;
     } finally {
       setOccupato(false);
     }
@@ -174,11 +184,31 @@ export function CartellaLavoro() {
     }
   }
 
-  async function scollega() {
+  /** Scollegamento effettivo (dopo l'eventuale conferma sulle modifiche). */
+  async function eseguiScollega() {
     await dimenticaHandleCommessa();
     setHandle(null);
     setDaRiaprire(null);
     avvisa('Cartella scollegata. La cache resta finché non la ricarichi o reimporti.');
+  }
+
+  /** Richiesta di scollegamento: se ci sono modifiche non salvate, chiede prima. */
+  function scollega() {
+    if (sporco) {
+      setChiediScollega(true);
+      return;
+    }
+    void eseguiScollega();
+  }
+
+  async function salvaEScollega() {
+    setChiediScollega(false);
+    if (await salva()) await eseguiScollega(); // se il salvataggio fallisce, NON scollega
+  }
+
+  function scollegaSenzaSalvare() {
+    setChiediScollega(false);
+    void eseguiScollega();
   }
 
   // --- Fallback senza File System Access: progetto come file .json ----------
@@ -200,6 +230,7 @@ export function CartellaLavoro() {
       a.download = 'progetto.kerios.json';
       a.click();
       URL.revokeObjectURL(url);
+      segnaPulito(); // il fallback "scarica" è un salvataggio del progetto
       avvisa('Progetto scaricato.', 'ok');
     } finally {
       setOccupato(false);
@@ -215,6 +246,7 @@ export function CartellaLavoro() {
         const p = validaProgetto(JSON.parse(await file.text()));
         await applicaProgettoACache(p);
         ricarica();
+        segnaPulito(); // appena aperto da file: cache == progetto su disco
         avvisa(
           `Progetto aperto · ${p.cls.prelievi.length} prelievi, ${p.cls.controlli.length} controlli.`,
           'ok',
@@ -332,6 +364,15 @@ export function CartellaLavoro() {
       <p className={`${styles.stato} ${statoClasse}`} role="status" aria-live="polite">
         {messaggio}
       </p>
+
+      {chiediScollega && (
+        <DialogModifiche
+          azione="scollegare"
+          onSalvaEProcedi={() => void salvaEScollega()}
+          onProcediSenzaSalvare={scollegaSenzaSalvare}
+          onAnnulla={() => setChiediScollega(false)}
+        />
+      )}
     </section>
   );
 }

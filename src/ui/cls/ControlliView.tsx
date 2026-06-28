@@ -51,6 +51,7 @@ export function ControlliView() {
   const prelievi = useStore((s) => s.prelievi);
   const soglie = useStore((s) => s.soglie);
   const revisioneDati = useStore((s) => s.revisioneDati);
+  const segnaSporco = useStore((s) => s.segnaSporco);
   const [modo, setModo] = useState<ModoRaggruppamento | ''>('');
   const [gruppi, setGruppi] = useState<GruppoState[]>([]);
   const [salvati, setSalvati] = useState<ControlloSalvato[]>([]);
@@ -109,11 +110,13 @@ export function ControlliView() {
       ...(g.tipo ? { tipo: g.tipo } : {}),
     });
     await salvaControllo(c);
+    segnaSporco(); // modifica non ancora versata nel progetto
     setSalvati(await caricaTuttiControlli());
   }
 
   async function elimina(id: string) {
     await eliminaControllo(id);
+    segnaSporco();
     setSalvati(await caricaTuttiControlli());
   }
 
@@ -126,6 +129,7 @@ export function ControlliView() {
       return;
     }
     await svuotaControlli();
+    segnaSporco();
     setSalvati(await caricaTuttiControlli());
   }
 

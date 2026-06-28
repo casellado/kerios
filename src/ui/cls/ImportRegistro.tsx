@@ -18,6 +18,7 @@ export function ImportRegistro() {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const setPrelievi = useStore((s) => s.setPrelievi);
+  const segnaSporco = useStore((s) => s.segnaSporco);
   const [stato, setStato] = useState<Stato>('idle');
   const [messaggio, setMessaggio] = useState('');
   const [trascina, setTrascina] = useState(false);
@@ -30,6 +31,7 @@ export function ImportRegistro() {
       await salvaPrelieviCls(esito.prelievi); // IndexedDB, batch
       const tutti = await caricaTuttiPrelieviCls();
       setPrelievi(tutti);
+      segnaSporco(); // import = modifica non ancora versata nel progetto
       setStato('fatto');
       const err = esito.errori.length ? ` · ${esito.errori.length} avvisi` : '';
       setMessaggio(`Importati ${esito.prelievi.length} prelievi da ${file.name}${err}.`);

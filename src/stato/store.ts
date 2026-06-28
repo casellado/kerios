@@ -27,6 +27,18 @@ interface StatoApp {
    */
   revisioneDati: number;
   ricarica: () => void;
+
+  /**
+   * Stato SPORCO (M4 micro-fix): true se ci sono modifiche ai dati di lavoro non
+   * ancora salvate nel progetto (la cartella-verità). Acceso dalle mutazioni
+   * della cache (salva/elimina/svuota un controllo, import); spento dopo un
+   * salvataggio riuscito o un'ereditarietà dalla cartella (cache == verità).
+   * Serve a chiedere conferma PRIMA di scollegare/cambiare cartella, solo quando
+   * c'è davvero qualcosa da perdere (niente avvisi-rumore).
+   */
+  sporco: boolean;
+  segnaSporco: () => void;
+  segnaPulito: () => void;
 }
 
 export const useStore = create<StatoApp>((set) => ({
@@ -41,4 +53,8 @@ export const useStore = create<StatoApp>((set) => ({
 
   revisioneDati: 0,
   ricarica: () => set((s) => ({ revisioneDati: s.revisioneDati + 1 })),
+
+  sporco: false,
+  segnaSporco: () => set({ sporco: true }),
+  segnaPulito: () => set({ sporco: false }),
 }));
