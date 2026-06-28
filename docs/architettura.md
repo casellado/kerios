@@ -75,6 +75,29 @@ Lo stato dell'app contiene:
 Il **Quadro generale** è una funzione pura `proietta(controlli) → vista per WBS`.
 Non ha stato proprio.
 
+### Parte d'opera: import (campo unico) vs nativo (opera/parte/componente)
+
+> Decisione PO+CTO. Completa il contratto K2↔Kerios (vedi filosofia-kerios.md
+> §"La qualità del dato si imposta a monte").
+
+Il prodotto ha due modalità con due strutture del campo "parte d'opera":
+
+- **IMPORT (oggi).** `Prelievo.parte: string` resta un **CAMPO UNICO di testo
+  libero** (es. `Sottovia - Palo Fondazione N°18 - KM(1+876,84)`), perché il
+  registro importato è dato altrui e sporco. Il raggruppamento dei controlli usa
+  **WBS + mix** (NON la parte d'opera, che è inaffidabile come chiave). **NON** si
+  introducono ORA i tre campi separati: uno split automatico su testo libero
+  sarebbe fragile e contaminerebbe il nucleo da validare.
+- **NATIVO (K2 / EUNIKA, dopo).** Il registro generato in campo struttura il dato
+  **alla fonte**: `opera`, `parteOpera`, `componente` come **campi DISTINTI** nel
+  contratto JSON K2→Kerios. Così a valle non serve più ri-spezzare la parte
+  d'opera (oggi fatto a mano nel documento ST36 in *Ubicazione + Denominazione*).
+
+Implicazione per il design del contratto (`core/contratto.ts`,
+contratto-json-k2-kerios.md): **prevedere fin d'ora** i campi separati
+opera/parte/componente per il dato NATIVO, **mantenendo** `parte` unico per
+l'import (il contratto regge entrambe le origini senza divergere).
+
 ## Gestione stato
 
 Store leggero (Zustand consigliato; in alternativa Context + useReducer).

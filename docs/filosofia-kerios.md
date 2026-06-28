@@ -32,6 +32,43 @@ SENZA la riconciliazione automatica: il deposito è un gesto consapevole, non un
 sync alle spalle dell'utente. Così la persona sa sempre cosa ha pubblicato e
 quando. Vedi struttura-cartelle.md, correzioni-e-viste.md.
 
+## La qualità del dato: si imposta a monte, non si ripara a valle
+
+> Decisione PO+CTO. NON introduce nuove modalità: la dualità "Kerios IMPORTA dato
+> altrui" vs "K2 CREA dato nuovo" esiste già (contratto-json-k2-kerios.md). Questa
+> nota COMPLETA il quadro col dettaglio che mancava — COME è strutturato il dato
+> nella modalità di CREAZIONE — senza toccare il modello di import attuale.
+
+Lo stesso prodotto vive in **due modalità** (non due prodotti):
+
+- **Modalità IMPORT (oggi — registro altrui).** Kerios accoglie il registro così
+  com'è: una WBS per file (è già partizionato per WBS), e **"parte d'opera" come
+  CAMPO UNICO di testo libero** (es. `Sottovia - Palo Fondazione N°18 -
+  KM(1+876,84)`). Raggruppa i controlli per **WBS + mix**, forzabile a mano per i
+  casi che solo l'occhio del DL distingue. Kerios **si ADATTA al dato sporco**:
+  non chiede al DL di ripulire dati prodotti da altri.
+- **Modalità NATIVA (domani — Kerios/EUNIKA genera il registro).** Il registro
+  nasce in campo (K2) col dato **STRUTTURATO dall'origine: opera / parte d'opera /
+  componente come campi DISTINTI**. Niente import, niente spazzatura, niente split
+  manuale a valle.
+
+**Il principio:** la qualità del dato **non si ripara a valle, si imposta a
+monte**. Finché Kerios è a VALLE (importa), si adatta allo sporco; quando sarà a
+MONTE (genera), il problema sparisce perché il dato nasce pulito. È lo stesso
+prodotto che, passando da "importare" a "generare", fa emergere il modo corretto
+di lavorare del PO.
+
+**Evidenza dal campo:** nei registri reali del lotto (`Registro_CLS_ST11`,
+`ST36_Controllo_accettazione_cls`) la "parte d'opera" è testo libero ammucchiato,
+e il documento di controllo ST36 la **ri-spezza a mano** in *Ubicazione +
+Denominazione*. Doppio lavoro, fonte d'errore. Il modello nativo
+opera/parte/componente **elimina lo sbroglio a valle**.
+
+> Conseguenza operativa (vedi architettura.md §Modello dati): ORA NON si
+> introducono i tre campi separati nel modello di import (sarebbe uno split
+> fragile su testo libero); parte d'opera resta campo unico. DOPO (K2 nativo /
+> EUNIKA) il contratto JSON K2→Kerios prevede opera/parte/componente alla fonte.
+
 ## Come usare questa bussola (per Code e CTO)
 Davanti a una scelta "automatizziamo o lasciamo all'utente?", chiedersi:
 - questo passaggio è FATICA ripetitiva o fonte di ERRORE? → automatizzare.
