@@ -69,6 +69,45 @@
   margin: 0;
   font-size: 16px;
 }
+.schAzioni {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.esporta {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--steel);
+  color: #fff;
+  cursor: pointer;
+}
+.esporta:hover {
+  background: var(--steel-700);
+}
+.apri {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--steel);
+  cursor: pointer;
+}
+.apri:hover {
+  border-color: var(--steel);
+}
+.esporta:focus-visible,
+.apri:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .badge {
   font-size: 12px;
   font-weight: 700;
@@ -93,6 +132,21 @@
 .controlloBox {
   border-top: 1px solid var(--line-soft);
   padding-top: 12px;
+}
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.flag input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 .sposta {
   display: inline-flex;

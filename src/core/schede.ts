@@ -19,6 +19,6 @@ export interface SchedaExport {
   esportato: boolean;
   /** ISO della data di export (se esportato). */
   esportatoIl?: string;
-  /** nome-file del .docx generato (export = passo successivo). */
-  fileDocx?: string;
+  /** nome-file dell'.xlsx ST36 generato (es. ST36_<wbs>_scheda<numero>.xlsx). */
+  fileXlsx?: string;
 }
