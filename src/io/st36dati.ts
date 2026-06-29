@@ -34,6 +34,7 @@ export interface RigaST36 {
 /** Un controllo pronto per il documento: righe + valori terzina (numerici). */
 export interface ControlloST36 {
   tipo: 'A' | 'B';
+  esito: ControlloSalvato['esito']; // per il semaforo verde/rosso sulla Rck eff
   opera?: string;
   righe: RigaST36[];
   rmin: number | null;
@@ -65,6 +66,7 @@ export function mappaControlloST36(cd: ControlloPerDoc, soglie: Soglie): Control
   });
   return {
     tipo: cd.ctrl.tipo,
+    esito: cd.ctrl.esito,
     ...(cd.ctrl.opera ? { opera: cd.ctrl.opera } : {}),
     righe,
     rmin: num(r.rcmin),

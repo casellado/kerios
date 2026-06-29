@@ -6,6 +6,10 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   base: '/',
   plugins: [react()],
+  // exceljs è importato DINAMICAMENTE (code-split per l'export ST36 .xlsx): va
+  // pre-bundlato esplicitamente, altrimenti in dev il dynamic import di questa dep
+  // CJS pesante non viene risolto ("Failed to fetch dynamically imported module").
+  optimizeDeps: { include: ['exceljs'] },
   test: {
     globals: true,
     environment: 'node', // il dominio è TS puro: i test girano senza DOM.

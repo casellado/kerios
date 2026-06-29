@@ -321,6 +321,15 @@
   color: var(--steel);
   font-weight: 700;
 }
+/* semaforo esito sulla Rck eff (stesso linguaggio dei colori conformità) */
+.ctrlOk {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.ctrlNo {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
 
 .disug {
   list-style: none;

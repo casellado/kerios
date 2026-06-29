@@ -122,7 +122,12 @@ export function GruppoControllo(props: Props) {
         <td rowSpan={n} className={`${styles.num} ${styles.ctrl}`}>
           {fmt(r.rcm28)}
         </td>
-        <td rowSpan={n} className={`${styles.num} ${styles.ctrl} ${styles.evidenza}`}>
+        <td
+          rowSpan={n}
+          className={`${styles.num} ${styles.ctrl} ${styles.evidenza} ${
+            completo ? (r.conforme ? styles.ctrlOk : styles.ctrlNo) : ''
+          }`}
+        >
           {fmt(r.rckEffettiva)}
         </td>
       </>

@@ -1,175 +1,135 @@
 /**
- * Generatore del documento ST36 in EXCEL (.xlsx) — formato NATIVO del controllo
- * reale del PO. Misure ESATTE dalla SPEC chirurgica del CTO (font, larghezze,
- * altezze, merge, bordi, formati numerici). Usa `exceljs` (bordi + grassetto +
- * merge, che SheetJS community NON scrive) con import() DINAMICO (code-split).
+ * Export ST36 (.xlsx) — COMPILA il template, non lo costruisce da zero.
  *
- * Foglio "MORTO": valori NUMERICI congelati dall'engine (NON formule Excel).
- * Engine invariato — i dati arrivano già mappati da st36dati.ts.
+ * Il template `public/Template_Controllo_accettazione_cls.xlsx` ha già layout,
+ * impaginazione (A4 landscape, print_area A1:O30, margini), fasce, 6 blocchi-
+ * terzina (merge), bordi e formati numerici. Qui si APRE il template e si
+ * SCRIVONO SOLO I DATI, preservando tutta la formattazione (verificato: exceljs
+ * conserva print_area/orientamento/margini/merge/bordi/numFmt nel ciclo
+ * load → scrivi → writeBuffer).
+ *
+ * exceljs con import() DINAMICO (code-split). Engine INVARIATO: i dati arrivano
+ * già mappati da st36dati.ts; qui si ARROTONDA solo il valore scritto (l'engine
+ * resta a piena precisione) per evitare 53,5999… al posto di 53,60.
  */
 import type { ControlloST36 } from './st36dati.ts';
 
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
+/** URL statico del template (servito da Vite da public/, dev e build). */
+export const TEMPLATE_URL = '/Template_Controllo_accettazione_cls.xlsx';
+
+// semaforo esito (fill solido sulla Rck eff): verde conforme / rosso non conforme.
+const VERDE = 'FFC6EFCE';
+const ROSSO = 'FFFFC7CE';
+
+type Cella = { style: object; fill: object };
+// Nel template la colonna O condivide UN solo oggetto-stile (fill verdino di
+// default): mutare `cell.fill` muterebbe TUTTE le celle che lo condividono. Assegno
+// uno stile FRESCO per cella (spread) così cambio il fill solo di quella, senza
+// toccare bordi/font/numFmt (preservati nello spread).
+const impostaFill = (cell: Cella, fill: object): void => {
+  cell.style = { ...cell.style, fill };
+};
+const FILL_VUOTO = { type: 'pattern', pattern: 'none' } as const;
+
+// terzine del template: prima riga R7, poi ogni 3 righe (R7, R10, …, R22 = max 6).
+const TERZINA_RIGA0 = 7;
+const RIGHE_PER_TERZINA = 3;
+
 export interface OpzioniXlsxST36 {
   intestazione: string; // profilo (testo libero: R1 = riga 1, R2 = resto)
   numeroScheda: number;
   controlli: ControlloST36[]; // i controlli FLAGGATI (≤6)
+  /** Buffer del template (per i test). In runtime, se assente, si fa fetch dell'URL. */
+  templateBuffer?: ArrayBuffer;
 }
 
-const FONT = 'Open Sans';
-const N_COL = 15; // A..O
-// larghezze Excel (spec): A..O
-const LARGHEZZE = [10.9, 4.9, 8.6, 14.6, 14.9, 13.6, 9.9, 9, 8.9, 5.9, 6, 6, 10.6, 10, 13.6];
-// intestazioni R6 (F vuota: "Laboratorio" è la fascia F5:F6)
-const INTEST_COLONNE = [
-  'Data',
-  'Rck',
-  'Verbale',
-  'Ubicazione',
-  'Denominazione',
-  '',
-  'Certificato',
-  'Data Prova',
-  'Rott. a gg.',
-  'R1',
-  'R2',
-  'R',
-  'Rmin',
-  'Rm',
-  'Rck effettiva',
-];
+const r2 = (x: number | null): number | null => (x == null ? null : Math.round(x * 100) / 100);
+const r1 = (x: number | null): number | null => (x == null ? null : Math.round(x * 10) / 10);
 
-/** Genera il Blob .xlsx ST36 dai controlli scelti. */
+async function caricaTemplate(): Promise<ArrayBuffer> {
+  const res = await fetch(TEMPLATE_URL);
+  if (!res.ok) throw new Error(`Template ST36 non trovato (HTTP ${res.status}).`);
+  return res.arrayBuffer();
+}
+
+/** Compila il template ST36 coi controlli scelti → Blob .xlsx. */
 export async function generaXlsxST36(opts: OpzioniXlsxST36): Promise<Blob> {
-  const ExcelJS = (await import('exceljs')).default;
+  const mod = await import('exceljs');
+  const ExcelJS = mod.default ?? (mod as unknown as typeof mod.default);
+  const buf = opts.templateBuffer ?? (await caricaTemplate());
   const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('ST36', { pageSetup: { orientation: 'landscape' } });
-  ws.columns = LARGHEZZE.map((w) => ({ width: w }));
+  await wb.xlsx.load(buf);
+  const ws = wb.worksheets[0];
+  if (!ws) throw new Error('Template ST36: foglio non trovato.');
 
-  type Stile = { bold?: boolean; size?: number; center?: boolean; numFmt?: string };
-  const set = (r: number, c: number, val: string | number | null, st: Stile = {}) => {
-    const cell = ws.getCell(r, c);
-    cell.value = val == null ? '' : val;
-    cell.font = { name: FONT, size: st.size ?? 8, bold: !!st.bold };
-    cell.alignment = {
-      horizontal: st.center ? 'center' : 'left',
-      vertical: 'middle',
-      wrapText: true,
-    };
-    if (st.numFmt && typeof val === 'number') cell.numFmt = st.numFmt;
-  };
-
-  // --- Intestazione (R1-R3), FUORI dalla tabella, niente bordi ---
+  // --- Intestazione (celle già formattate nel template): scrivi solo il testo ---
   const linee = opts.intestazione.split(/\r?\n/);
-  ws.mergeCells(1, 1, 1, N_COL);
-  set(1, 1, linee[0] ?? '', { bold: true, size: 12 });
-  ws.mergeCells(2, 1, 2, N_COL);
-  set(2, 1, linee.slice(1).join(' '), { bold: true, size: 12 });
+  ws.getCell('A1').value = linee[0] ?? '';
+  ws.getCell('A2').value = linee.slice(1).join(' ');
 
-  // R3: opera + pk (da ControlloSalvato.opera). pk in E3 se separabile, altrimenti tutto in A3.
+  // R3: opera + pk (da ControlloSalvato.opera). pk in E3 se separabile.
   const opere = [
     ...new Set(opts.controlli.map((c) => c.opera?.trim()).filter(Boolean)),
   ] as string[];
-  let operaA = '';
-  let operaE = '';
   if (opere.length === 1) {
     const m = opere[0].match(/^(.*?)[\s·-]*(pk\b.*)$/i);
     if (m) {
-      operaA = m[1].trim();
-      operaE = m[2].trim();
+      ws.getCell('A3').value = m[1].trim();
+      ws.getCell('E3').value = m[2].trim();
     } else {
-      operaA = opere[0];
+      ws.getCell('A3').value = opere[0];
     }
   } else if (opere.length > 1) {
-    operaA = opere.join('  ·  ');
+    ws.getCell('A3').value = opere.join('  ·  ');
   }
-  ws.mergeCells(3, 1, 3, 4);
-  set(3, 1, operaA, { bold: true, size: 12 });
-  ws.mergeCells(3, 5, 3, N_COL);
-  set(3, 5, operaE, { bold: true, size: 12 });
 
-  // altezze righe
-  ws.getRow(1).height = 20;
-  ws.getRow(2).height = 20;
-  ws.getRow(3).height = 20;
-  ws.getRow(4).height = 10; // R4 separatore sottile (vuoto)
-
-  // --- Fasce di testata R5 (BOLD sz10, center, merge gruppi colonne) ---
-  const tipi = new Set(opts.controlli.map((c) => c.tipo));
-  const bandaControllo =
-    tipi.size === 1
-      ? `Controllo di accettazione "TIPO ${[...tipi][0]}"`
-      : 'Controllo di accettazione';
-  ws.mergeCells(5, 1, 5, 3);
-  set(5, 1, 'PRELIEVO CAMPIONE', { bold: true, size: 10, center: true });
-  ws.mergeCells(5, 4, 5, 5);
-  set(5, 4, 'PARTE DI OPERA', { bold: true, size: 10, center: true });
-  ws.mergeCells(5, 6, 6, 6); // F5:F6 (Laboratorio, unita verticale)
-  set(5, 6, 'LABORATORIO', { bold: true, size: 10, center: true });
-  ws.mergeCells(5, 7, 5, 12);
-  set(5, 7, 'RISULTATI DELLE PROVE', { bold: true, size: 10, center: true });
-  ws.mergeCells(5, 13, 5, 15);
-  set(5, 13, bandaControllo, { bold: true, size: 10, center: true });
-  ws.getRow(5).height = 20;
-
-  // --- Intestazioni colonna R6 (BOLD sz8, center) ---
-  INTEST_COLONNE.forEach((h, i) => {
-    if (i === 5) return; // F6 vuota (parte della fascia F5:F6)
-    set(6, i + 1, h, { bold: true, size: 8, center: true });
-  });
-  ws.getRow(6).height = 20;
-
-  // --- Righe dati da R7; terzina M/N/O unita verticalmente su n righe (sz10) ---
-  let row = 7;
-  for (const c of opts.controlli) {
-    const n = c.righe.length;
-    const inizio = row;
+  // --- Righe dati: una terzina per controllo (max 6). Le eccedenze restano VUOTE. ---
+  opts.controlli.slice(0, 6).forEach((c, k) => {
+    const r0 = TERZINA_RIGA0 + k * RIGHE_PER_TERZINA;
     c.righe.forEach((rg, i) => {
-      set(row, 1, rg.data, { center: true });
-      set(row, 2, rg.rck, { center: true, numFmt: '0' });
-      set(row, 3, rg.verbale, { center: true });
-      set(row, 4, rg.ubicazione, { center: true });
-      set(row, 5, rg.denominazione, { center: true });
-      set(row, 6, rg.laboratorio, { center: true });
-      set(row, 7, rg.certificato, { center: true });
-      set(row, 8, rg.dataProva, { center: true });
-      set(row, 9, rg.rottGg, { center: true, numFmt: '0' });
-      set(row, 10, rg.r1, { center: true, numFmt: '0.0' });
-      set(row, 11, rg.r2, { center: true, numFmt: '0.0' });
-      set(row, 12, rg.r, { center: true, bold: true, numFmt: '0.00' });
-      if (i === 0) {
-        set(row, 13, c.rmin, { center: true, size: 10, numFmt: '0.00' });
-        set(row, 14, c.rm, { center: true, size: 10, numFmt: '0.00' });
-        set(row, 15, c.rckEff, { center: true, size: 10, bold: true, numFmt: '0.00' });
-      }
-      ws.getRow(row).height = 20;
-      row += 1;
+      const r = r0 + i;
+      ws.getCell(r, 1).value = rg.data; // A
+      ws.getCell(r, 2).value = rg.rck; // B (intero, numFmt nel template)
+      ws.getCell(r, 3).value = rg.verbale; // C
+      ws.getCell(r, 4).value = rg.ubicazione; // D = parte
+      ws.getCell(r, 5).value = rg.denominazione; // E (vuota)
+      ws.getCell(r, 6).value = rg.laboratorio; // F
+      ws.getCell(r, 7).value = rg.certificato; // G
+      ws.getCell(r, 8).value = rg.dataProva; // H
+      ws.getCell(r, 9).value = rg.rottGg; // I (intero)
+      ws.getCell(r, 10).value = r1(rg.r1); // J — R1 a 1 decimale
+      ws.getCell(r, 11).value = r1(rg.r2); // K — R2 a 1 decimale
+      ws.getCell(r, 12).value = r2(rg.r); // L — R a 2 decimali
     });
-    if (n > 1) {
-      ws.mergeCells(inizio, 13, inizio + n - 1, 13);
-      ws.mergeCells(inizio, 14, inizio + n - 1, 14);
-      ws.mergeCells(inizio, 15, inizio + n - 1, 15);
+    // valori del controllo sulla 1ª riga (M/N/O già merge-ate nel template)
+    ws.getCell(r0, 13).value = r2(c.rmin); // M = Rmin
+    ws.getCell(r0, 14).value = r2(c.rm); // N = Rm
+    ws.getCell(r0, 15).value = r2(c.rckEff); // O = Rck eff
+    // semaforo esito sulla Rck eff (cella master O della terzina)
+    const argb = c.esito === 'conforme' ? VERDE : c.esito === 'non_conforme' ? ROSSO : null;
+    if (argb) {
+      impostaFill(ws.getCell(r0, 15) as unknown as Cella, {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb },
+      });
+    }
+  });
+
+  // Terzine NON usate (< 6 controlli): il template ha fill residui (verdino sulla
+  // col O, grigio su alcune righe) → azzerali su TUTTE le celle A..O delle 3 righe
+  // così la scheda mostra le terzine in eccesso vuote e NEUTRE (bianche).
+  for (let k = opts.controlli.length; k < 6; k += 1) {
+    const r0 = TERZINA_RIGA0 + k * RIGHE_PER_TERZINA;
+    for (let i = 0; i < RIGHE_PER_TERZINA; i += 1) {
+      for (let cc = 1; cc <= 15; cc += 1) {
+        impostaFill(ws.getCell(r0 + i, cc) as unknown as Cella, FILL_VUOTO);
+      }
     }
   }
-  const tabFine = row - 1;
 
-  // --- GRIGLIA: bordo sottile LRTB su OGNI cella della tabella (R5..tabFine),
-  //     incluse le celle delle aree unite (fasce e terzina). ---
-  const sottile = { style: 'thin' as const, color: { argb: 'FF000000' } };
-  for (let r = 5; r <= tabFine; r += 1) {
-    for (let cc = 1; cc <= N_COL; cc += 1) {
-      ws.getCell(r, cc).border = { top: sottile, left: sottile, bottom: sottile, right: sottile };
-    }
-  }
-
-  // --- Firma (merge M:O sotto la tabella, ~2 righe dopo) — NESSUN NOME ---
-  const rFirma = tabFine + 3;
-  ws.mergeCells(rFirma, 13, rFirma, 15);
-  set(rFirma, 13, 'IL DIRETTORE LAVORI', { size: 10, center: true });
-  ws.mergeCells(rFirma + 1, 13, rFirma + 1, 15);
-  set(rFirma + 1, 13, '', { center: true }); // riga vuota per la firma a mano
-
-  const buf = await wb.xlsx.writeBuffer();
-  return new Blob([buf], { type: XLSX_MIME });
+  const out = await wb.xlsx.writeBuffer();
+  return new Blob([out], { type: XLSX_MIME });
 }

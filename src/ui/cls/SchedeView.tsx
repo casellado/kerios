@@ -19,7 +19,17 @@ import { IntestazioneCantiere } from '../comuni/IntestazioneCantiere.tsx';
 import styles from './SchedeView.module.css';
 
 const MATERIALE_CLS = 'calcestruzzo';
-const nomeFileScheda = (wbs: string, numero: number) => `ST36_${wbs}_scheda${numero}.xlsx`;
+// Il PO vuole il file col nome dell'OPERA del controllo. Sanifico solo i caratteri
+// illegali nei nomi file (/ \ : * ? " < > |) e gli spazi ai bordi; gli spazi interni
+// restano (validi). Fallback prevedibile se l'opera non è compilata.
+const nomeFileScheda = (opera: string | undefined, wbs: string, numero: number) => {
+  const pulita = (opera ?? '')
+    .replace(/[/\\:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const base = pulita || `Controllo_accettazione_${wbs}_scheda${numero}`;
+  return `${base}.xlsx`;
+};
 
 /**
  * Vista a SCHEDE da 6 (pre-export ST36): raggruppa i controlli COMPLETI in fogli
@@ -134,7 +144,8 @@ export function SchedeView() {
     const perDoc = risolviSelezione(sch);
     if (!perDoc) return; // messaggio già impostato (niente flag / WBS non caricata / mancante)
     const wbs = sch.wbs ?? perDoc[0]?.ctrl.wbs ?? 'WBS';
-    const nome = nomeFileScheda(wbs, sch.numero);
+    // nome = opera del PRIMO controllo della scheda (di norma una scheda = un'opera)
+    const nome = nomeFileScheda(perDoc[0]?.ctrl.opera, wbs, sch.numero);
     try {
       const blob = await generaXlsxST36({
         intestazione,
