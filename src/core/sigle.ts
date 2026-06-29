@@ -48,3 +48,30 @@ export function parseSiglaImport(str: string): SiglaParsed | null {
   if (!Number.isFinite(numero)) return null;
   return { prefisso, numero, display: formattaSiglaVerbale(prefisso, numero) };
 }
+
+/**
+ * Materiale ricavato dal numero di verbale (discriminante NATURALE, non
+ * euristica). Distinto da `Materiale` (contratto.ts) perché include 'sconosciuto'.
+ */
+export type MaterialeVerbale = 'cls' | 'acciaio' | 'sconosciuto';
+
+/** Prefisso → materiale: UN SOLO posto che sa cosa significa "CLS"/"AC1". */
+const PREFISSO_MATERIALE: Readonly<Record<string, MaterialeVerbale>> = {
+  CLS: 'cls',
+  AC1: 'acciaio',
+};
+
+/**
+ * Dal numero di verbale ricava il MATERIALE dal PREFISSO (CLS → calcestruzzo,
+ * AC1 → acciaio, altro → sconosciuto). Pura, riusabile da import, modulo acciaio
+ * e Themis. Il significato dei prefissi vive QUI nel Cuore, non sparso nell'io.
+ */
+export function materialeDaVerbale(verbale: string): MaterialeVerbale {
+  const prefisso = parseSiglaImport(verbale)?.prefisso;
+  return (prefisso && PREFISSO_MATERIALE[prefisso]) || 'sconosciuto';
+}
+
+/** true se il verbale è di CALCESTRUZZO (prefisso CLS). */
+export function eVerbaleCls(verbale: string): boolean {
+  return materialeDaVerbale(verbale) === 'cls';
+}

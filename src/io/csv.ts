@@ -14,7 +14,7 @@
  *  8/9. Campi fase 2/3 e R1/R2 possono mancare → stato derivato, degrada con grazia.
  */
 import Papa from 'papaparse';
-import type { Prelievo } from '../core/index.ts';
+import { materialeDaVerbale, type Prelievo } from '../core/index.ts';
 import { parseNumeroIt } from './formato.ts';
 
 /** Decodifica byte cp1252 → stringa JS. */
@@ -52,6 +52,45 @@ export interface EsitoImportCls {
   errori: string[];
   /** righe dati totali (escluso header). */
   totaleRighe: number;
+}
+
+export interface VerificaImport {
+  accettato: boolean;
+  /** messaggio per l'utente se il file è rifiutato. */
+  messaggio?: string;
+}
+
+/**
+ * GUARDIA all'ingresso del calcestruzzo: il TIPO di materiale è nel NUMERO di
+ * verbale (CLS = cls, AC1 = acciaio — discriminante naturale, vedi core/sigle).
+ * Rifiuta un file di ACCIAIO caricato per errore qui (errore reale del PO) o un
+ * file privo di verbali CLS. Un registro CLS valido passa esattamente come prima.
+ */
+export function verificaImportCls(prelievi: readonly Prelievo[]): VerificaImport {
+  let cls = 0;
+  let acciaio = 0;
+  for (const p of prelievi) {
+    const m = materialeDaVerbale(p.verbale);
+    if (m === 'cls') cls += 1;
+    else if (m === 'acciaio') acciaio += 1;
+  }
+  if (acciaio > 0) {
+    return {
+      accettato: false,
+      messaggio:
+        'Questo file contiene verbali di ACCIAIO (AC1), non di calcestruzzo (CLS). ' +
+        'Caricalo nel modulo acciaio, non qui. Nessun prelievo è stato importato.',
+    };
+  }
+  if (cls === 0) {
+    return {
+      accettato: false,
+      messaggio:
+        'Questo file non sembra un registro di calcestruzzo: non contiene verbali CLS. ' +
+        'Controlla di aver scelto il file giusto. Nessun prelievo è stato importato.',
+    };
+  }
+  return { accettato: true };
 }
 
 function val(cells: string[], i: number): string | undefined {

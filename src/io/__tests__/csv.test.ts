@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { parseRegistroClsCsv, righeToEsito } from '../csv.ts';
+import type { Prelievo } from '../../core/index.ts';
+import { parseRegistroClsCsv, righeToEsito, verificaImportCls } from '../csv.ts';
 import { resistenzaPrelievo, statoPrelievo } from '../../domain/index.ts';
 
 // Legge il file REALE del PO (byte grezzi, senza assumere encoding).
@@ -106,5 +107,36 @@ describe('righeToEsito — robustezza mappatura (anche XLSX che dà numeri)', ()
     const e = righeToEsito([['', '01/01/2024', 'ST11']]);
     expect(e.prelievi).toHaveLength(0);
     expect(e.errori.length).toBe(1);
+  });
+});
+
+describe('verificaImportCls — guardia prefisso (CLS vs AC1)', () => {
+  const pr = (verbale: string): Prelievo => ({
+    id: verbale,
+    verbale,
+    data: '01/01/2024',
+    wbs: 'ST11',
+    parte: 'F',
+    rck: 40,
+    mix: 'MX',
+  });
+
+  it('registro CALCESTRUZZO (CLS) → accettato (entra come prima)', () => {
+    expect(verificaImportCls([pr('CLS 5607'), pr('CLS 5683')]).accettato).toBe(true);
+  });
+
+  it('registro ACCIAIO (AC1) caricato qui → RIFIUTATO, messaggio chiaro', () => {
+    const v = verificaImportCls([pr('AC1-0001'), pr('AC1-0002')]);
+    expect(v.accettato).toBe(false);
+    expect(v.messaggio).toMatch(/acciaio/i);
+  });
+
+  it('un solo AC1 in mezzo a CLS → comunque rifiutato (file sbagliato)', () => {
+    expect(verificaImportCls([pr('CLS 1'), pr('AC1-0001')]).accettato).toBe(false);
+  });
+
+  it('nessun verbale CLS (file estraneo/vuoto) → rifiutato', () => {
+    expect(verificaImportCls([pr('XYZ 1')]).accettato).toBe(false);
+    expect(verificaImportCls([]).accettato).toBe(false);
   });
 });

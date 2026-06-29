@@ -4,7 +4,27 @@ import {
   siglaToNomeFile,
   formattaSiglaVerbale,
   formattaSiglaCartellino,
+  materialeDaVerbale,
+  eVerbaleCls,
 } from '../sigle.ts';
+
+describe('materialeDaVerbale (discriminante dal prefisso)', () => {
+  it('CLS → calcestruzzo (nuovo e storico)', () => {
+    expect(materialeDaVerbale('CLS 5607')).toBe('cls');
+    expect(materialeDaVerbale('CLS/12')).toBe('cls');
+    expect(eVerbaleCls('CLS 5607')).toBe(true);
+  });
+  it('AC1 → acciaio (storico con trattino/zeri e nuovo)', () => {
+    expect(materialeDaVerbale('AC1-0001')).toBe('acciaio');
+    expect(materialeDaVerbale('AC1/1')).toBe('acciaio');
+    expect(eVerbaleCls('AC1-0001')).toBe(false);
+  });
+  it('prefisso ignoto o stringa non interpretabile → sconosciuto', () => {
+    expect(materialeDaVerbale('XYZ 1')).toBe('sconosciuto');
+    expect(materialeDaVerbale('boh')).toBe('sconosciuto');
+    expect(materialeDaVerbale('')).toBe('sconosciuto');
+  });
+});
 
 describe('parseSiglaImport (riconosce nuovo e storico)', () => {
   it('storico con spazio: "CLS 5607"', () => {

@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react';
-import { parseRegistroClsCsv, type EsitoImportCls } from '../../io/csv.ts';
+import { parseRegistroClsCsv, verificaImportCls, type EsitoImportCls } from '../../io/csv.ts';
 import { parseRegistroClsXlsx } from '../../io/xlsx.ts';
 import { salvaPrelieviCls, caricaTuttiPrelieviCls } from '../../io/importa.ts';
 import { useStore } from '../../stato/store.ts';
@@ -28,6 +28,14 @@ export function ImportRegistro() {
     setMessaggio(`Lettura di ${file.name}…`);
     try {
       const esito = await leggiFile(file);
+      // GUARDIA: il file deve essere calcestruzzo (verbali CLS). Acciaio (AC1) o
+      // file estraneo → rifiuto, nessun prelievo entra (errore reale del PO).
+      const verifica = verificaImportCls(esito.prelievi);
+      if (!verifica.accettato) {
+        setStato('errore');
+        setMessaggio(verifica.messaggio ?? 'File non valido per il calcestruzzo.');
+        return;
+      }
       await salvaPrelieviCls(esito.prelievi); // IndexedDB, batch
       const tutti = await caricaTuttiPrelieviCls();
       setPrelievi(tutti);
