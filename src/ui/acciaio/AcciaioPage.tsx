@@ -6,17 +6,19 @@ import { useStore } from '../../stato/store.ts';
 import { CartellaLavoro } from '../cls/CartellaLavoro.tsx';
 import { AnagraficaCantiere } from '../cls/AnagraficaCantiere.tsx';
 import { IntestazioneCantiere } from '../comuni/IntestazioneCantiere.tsx';
-import { InCostruzione } from '../comuni/InCostruzione.tsx';
 import { ImportRegistroAcciaio } from './ImportRegistroAcciaio.tsx';
 import { TabellaPrelieviAcciaio } from './TabellaPrelieviAcciaio.tsx';
+import { SchedeViewAcciaio } from './SchedeViewAcciaio.tsx';
 import styles from '../cls/ClsPage.module.css';
+import info from './ControlliInfo.module.css';
 
 type Scheda = 'registro' | 'controlli' | 'schede';
 
 /**
- * Porta Acciaio (§ 11.3.2) — gemella di ClsPage, MODULO PARALLELO al cls. Fase 1:
- * tab Registro funzionante (import AC1 + tabella con esiti calcolati). Controlli e
- * Schede export arrivano nella fase 2 (controllo ogni 30 t + export template ST36).
+ * Porta Acciaio (§ 11.3.2) — gemella di ClsPage, MODULO PARALLELO al cls. Tre tab:
+ * Registro (import AC1 + esiti per prelievo), «Controlli di accettazione» (nota
+ * informativa: per l'acciaio non c'è uno step separato — scelta di dominio) e
+ * Schede export (raggruppa per WBS+produttore+Ø → documento ST36 dal template).
  */
 export function AcciaioPage() {
   const setPrelieviAcciaio = useStore((s) => s.setPrelieviAcciaio);
@@ -87,11 +89,34 @@ export function AcciaioPage() {
           <ImportRegistroAcciaio />
           <TabellaPrelieviAcciaio />
         </>
+      ) : scheda === 'schede' ? (
+        <SchedeViewAcciaio />
       ) : (
-        <InCostruzione
-          titolo={scheda === 'controlli' ? 'Controlli di accettazione' : 'Schede export'}
-          descrizione="Fase 2 del modulo acciaio: raggruppamento per Ø + produttore (ogni 30 t) ed export del documento ST36 acciaio compilando il template."
-        />
+        <section className={info.box} aria-labelledby="ctrl-acc-titolo">
+          <h2 id="ctrl-acc-titolo" className={info.titolo}>
+            Controlli di accettazione — Acciaio B450C
+          </h2>
+          <p>
+            Per l’acciaio non è previsto un controllo di accettazione separato come per il
+            calcestruzzo. La conformità di ogni prelievo (3 saggi) è verificata direttamente secondo
+            le soglie B450C — tensione di snervamento fy, allungamento Agt, rapporto ft/fy e prova
+            di piega — ed è già visibile, prelievo per prelievo, nel tab «Registro» (esiti
+            verde/rosso).
+          </p>
+          <p>
+            Il documento ST36 di accettazione si genera nel tab «Schede export», dove i prelievi
+            conformi sono raggruppati per WBS + produttore + diametro (il lotto di controllo
+            previsto dalle NTC 2018 §11.3.2), fino a 18 prelievi per scheda.
+          </p>
+          <div className={info.azioni}>
+            <button type="button" className={info.vai} onClick={() => setScheda('registro')}>
+              Vai al Registro
+            </button>
+            <button type="button" className={info.vai} onClick={() => setScheda('schede')}>
+              Vai a Schede export
+            </button>
+          </div>
+        </section>
       )}
     </section>
   );

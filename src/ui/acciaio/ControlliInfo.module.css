@@ -1,0 +1,40 @@
+/* Pannello informativo del tab "Controlli di accettazione" acciaio: spiega che
+   per l'acciaio non esiste uno step di controllo separato (scelta di dominio). */
+.box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--steel);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-top: 8px;
+}
+.titolo {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+.box p {
+  margin: 0 0 10px;
+  max-width: 70ch;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.azioni {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+.vai {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.vai:hover {
+  border-color: var(--steel);
+  color: var(--steel);
+}

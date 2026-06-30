@@ -22,3 +22,22 @@ export interface SchedaExport {
   /** nome-file dell'.xlsx ST36 generato (es. ST36_<wbs>_scheda<numero>.xlsx). */
   fileXlsx?: string;
 }
+
+/**
+ * Scheda di export ST36 ACCIAIO — gemella della cls ma riferita ai PRELIEVI (non a
+ * controlli): l'ST36 acciaio ha 1 riga per prelievo, fino a 18 (R7..R24). Store
+ * separato `schedeAcciaio` (decisione CTO: moduli paralleli, zero rischio sul cls).
+ */
+export const MAX_PRELIEVI_SCHEDA_ACCIAIO = 18;
+
+export interface SchedaExportAcciaio {
+  id: string;
+  numero: number;
+  /** WBS della scheda (le schede automatiche sono per WBS+Ø+produttore). */
+  wbs?: string;
+  /** id dei PrelievoAcciaio inclusi (≤ MAX_PRELIEVI_SCHEDA_ACCIAIO). */
+  prelieviIds: string[];
+  esportato: boolean;
+  esportatoIl?: string;
+  fileXlsx?: string;
+}
