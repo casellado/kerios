@@ -57,7 +57,7 @@ export function AnagraficaCantiere() {
         className={styles.area}
         rows={3}
         value={intestazione}
-        placeholder={'Es.\nS.S. n. 106 "Jonica"\nLavori di costruzione del 3° Megalotto…'}
+        placeholder={'Es.\nLavori di costruzione del ponte tra le nuvole'}
         onChange={(e) => {
           setIntestazione(e.target.value);
           segnaSporco();
@@ -68,7 +68,7 @@ export function AnagraficaCantiere() {
         Direttore dei Lavori
       </label>
       <p className={styles.aiuto}>
-        Solo il nome (es. «Ing. Biagio Marra»). Resta salvato localmente nella commessa; comparirà
+        Solo il nome (es. «Ing. Paolo Rossi»). Resta salvato localmente nella commessa; comparirà
         nella firma del documento ST36.
       </p>
       <input
@@ -76,7 +76,7 @@ export function AnagraficaCantiere() {
         type="text"
         className={styles.riga}
         value={direttoreLavori}
-        placeholder="Es. Ing. Biagio Marra"
+        placeholder="Es. Ing. Paolo Rossi"
         onChange={(e) => {
           setDirettoreLavori(e.target.value);
           segnaSporco();
