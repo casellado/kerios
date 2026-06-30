@@ -13,7 +13,9 @@ import type { DocumentoST36Acciaio } from './st36datiAcciaio.ts';
 import type { EsitoParam } from '../domain/index.ts';
 
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-export const TEMPLATE_URL = '/Template_Controllo_accettazione_acciaio.xlsx';
+// BASE_URL = '/' (Cloudflare) o '/kerios/' (GitHub Pages): il template sta in public/.
+export const TEMPLATE_URL =
+  (import.meta.env.BASE_URL ?? '/') + 'Template_Controllo_accettazione_acciaio.xlsx';
 
 const VERDE = 'FFC6EFCE';
 const ROSSO = 'FFFFC7CE';

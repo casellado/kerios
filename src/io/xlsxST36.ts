@@ -17,7 +17,9 @@ import type { ControlloST36 } from './st36dati.ts';
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** URL statico del template (servito da Vite da public/, dev e build). */
-export const TEMPLATE_URL = '/Template_Controllo_accettazione_cls.xlsx';
+// BASE_URL = '/' (Cloudflare) o '/kerios/' (GitHub Pages): il template sta in public/.
+export const TEMPLATE_URL =
+  (import.meta.env.BASE_URL ?? '/') + 'Template_Controllo_accettazione_cls.xlsx';
 
 // semaforo esito (fill solido sulla Rck eff): verde conforme / rosso non conforme.
 const VERDE = 'FFC6EFCE';
