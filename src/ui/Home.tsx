@@ -10,7 +10,7 @@ const SOTTOTITOLI: Record<string, string> = {
 
 const STATO_PORTA: Record<string, 'attiva' | 'in_costruzione'> = {
   '/calcestruzzi': 'attiva',
-  '/acciaio': 'in_costruzione',
+  '/acciaio': 'attiva', // modulo acciaio completo (registro + schede + export ST36)
   '/quadro': 'in_costruzione',
 };
 
