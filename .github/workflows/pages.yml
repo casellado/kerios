@@ -29,6 +29,9 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /kerios/
+      # SPA fallback: GitHub Pages serve 404.html per i path sconosciuti (deep-link/
+      # refresh delle rotte client come /kerios/calcestruzzi) → carica la stessa shell.
+      - run: cp dist/index.html dist/404.html
       # Pages è già abilitato sul repo (source = GitHub Actions)
       - uses: actions/upload-pages-artifact@v3
         with:
