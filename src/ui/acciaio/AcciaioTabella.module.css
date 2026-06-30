@@ -1,0 +1,25 @@
+/* Estensioni specifiche del registro ACCIAIO; il resto riusa TabellaPrelievi.module.css. */
+
+/* fascia di raggruppamento dell'header a 2 livelli (Parte di opera / Risultati / Esiti) */
+.banda {
+  text-align: center;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--steel) 10%, var(--paper));
+  border-bottom: 1px solid var(--line);
+}
+
+/* terna dei 3 saggi in una cella (v1 / v2 / v3) */
+.terna {
+  font-family: var(--mono);
+  white-space: nowrap;
+  text-align: center;
+}
+.terna .sep {
+  color: var(--ink-soft);
+  margin: 0 2px;
+}
+
+/* cella esito: centrata, il badge porta colore + forma + testo */
+.esito {
+  text-align: center;
+}

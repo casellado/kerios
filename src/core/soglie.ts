@@ -64,6 +64,27 @@ export const SOGLIE_DEFAULT: Soglie = {
   decimaliDisplay: 2,
 };
 
+/**
+ * Soglie ACCIAIO B450C in cantiere (NTC 2018 §11.3.2.12) — DECISE PO+CTO.
+ * Valori COMPLETI (limite inf. E sup.): il template ST36 controlla solo il
+ * superiore di fy/ftfy → l'engine Kerios applica le soglie piene (più corretto).
+ */
+export interface SoglieAcciaio {
+  fyMin: number; // N/mm²
+  fyMax: number;
+  agtMin: number; // %
+  ftfyMin: number;
+  ftfyMax: number;
+}
+
+export const SOGLIE_ACCIAIO: SoglieAcciaio = {
+  fyMin: 425,
+  fyMax: 572,
+  agtMin: 6,
+  ftfyMin: 1.13,
+  ftfyMax: 1.37,
+};
+
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }

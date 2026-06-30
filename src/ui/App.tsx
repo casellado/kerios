@@ -2,6 +2,7 @@ import { Link, Route, Routes } from 'react-router-dom';
 import { Home } from './Home.tsx';
 import { InCostruzione } from './comuni/InCostruzione.tsx';
 import { ClsPage } from './cls/ClsPage.tsx';
+import { AcciaioPage } from './acciaio/AcciaioPage.tsx';
 import styles from './App.module.css';
 
 /** Le tre porte: rotta canonica + etichetta + materiale (per gli accenti). */
@@ -29,15 +30,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/calcestruzzi" element={<ClsPage />} />
-          <Route
-            path="/acciaio"
-            element={
-              <InCostruzione
-                titolo="Acciaio"
-                descrizione="Controllo di accettazione tondini B450C/B450A e rete elettrosaldata (§ 11.3.2)."
-              />
-            }
-          />
+          <Route path="/acciaio" element={<AcciaioPage />} />
           <Route
             path="/quadro"
             element={

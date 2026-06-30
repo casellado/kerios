@@ -1,3 +1,8 @@
 .base {
   overflow-x: auto;
 }
+/* contenitore focusabile (scroll orizzontale da tastiera): focus visibile. */
+.base:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

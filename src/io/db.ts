@@ -16,7 +16,7 @@
  * WBS). I tipi di dominio vivono in core/ (non si duplicano qui).
  */
 import Dexie, { type Table } from 'dexie';
-import type { Prelievo, ControlloSalvato, SchedaExport } from '../core/index.ts';
+import type { Prelievo, ControlloSalvato, SchedaExport, PrelievoAcciaio } from '../core/index.ts';
 
 /**
  * Indice di sintesi per WBS — alimenta il Quadro generale SENZA caricare i
@@ -46,6 +46,7 @@ export class KeriosDB extends Dexie {
   controlliCls!: Table<ControlloSalvato, string>;
   appKv!: Table<AppKv, string>;
   schedeExport!: Table<SchedaExport, string>;
+  prelieviAcciaio!: Table<PrelievoAcciaio, string>;
 
   constructor() {
     super('kerios');
@@ -66,6 +67,11 @@ export class KeriosDB extends Dexie {
     // v4: schede di export ST36 (raggruppano i controlli completi, ≤6).
     this.version(4).stores({
       schedeExport: 'id, esportato',
+    });
+    // v5: modulo ACCIAIO — store PARALLELO ai cls (decisione CTO: niente IO
+    // generico, zero rischio sul cls collaudato). Le tabelle cls restano invariate.
+    this.version(5).stores({
+      prelieviAcciaio: 'id, wbs, diametro, produttore, data',
     });
   }
 }

@@ -3,7 +3,7 @@
  * dominio resta SERIALIZZABILE (per il file di progetto, M4).
  */
 import { create } from 'zustand';
-import type { Prelievo, Soglie } from '../core/index.ts';
+import type { Prelievo, PrelievoAcciaio, Soglie } from '../core/index.ts';
 import { SOGLIE_DEFAULT } from '../core/index.ts';
 import type { HandleCartella } from '../io/workspace.ts';
 
@@ -21,6 +21,10 @@ interface StatoApp {
   setPrelievi: (p: Prelievo[]) => void;
   /** Aggiorna in-place un singolo prelievo (M5: salva il riferimento a un file). */
   aggiornaPrelievo: (id: string, patch: Partial<Prelievo>) => void;
+
+  /** Prelievi ACCIAIO caricati in memoria (working set PARALLELO al cls). */
+  prelieviAcciaio: PrelievoAcciaio[];
+  setPrelieviAcciaio: (p: PrelievoAcciaio[]) => void;
 
   /**
    * Handle della cartella commessa attualmente collegata (M5: le celle-documento
@@ -71,6 +75,9 @@ export const useStore = create<StatoApp>((set) => ({
   setPrelievi: (prelievi) => set({ prelievi }),
   aggiornaPrelievo: (id, patch) =>
     set((s) => ({ prelievi: s.prelievi.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+
+  prelieviAcciaio: [],
+  setPrelieviAcciaio: (prelieviAcciaio) => set({ prelieviAcciaio }),
 
   cartella: null,
   setCartella: (cartella) => set({ cartella }),
