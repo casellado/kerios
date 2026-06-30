@@ -29,10 +29,7 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /kerios/
-      # abilita Pages (source = GitHub Actions) se non già attivo
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      # Pages è già abilitato sul repo (source = GitHub Actions)
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
