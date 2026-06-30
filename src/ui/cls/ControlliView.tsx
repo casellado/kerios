@@ -177,6 +177,38 @@ export function ControlliView() {
         <strong>rivedi</strong> e confermi. Nessun verdetto è automatico.
       </p>
 
+      <section className={styles.infoNorma} aria-labelledby="info-norma-titolo">
+        <h3 id="info-norma-titolo" className={styles.infoNormaTitolo}>
+          Controlli di accettazione — Calcestruzzo (NTC 2018 §11.2.5, Circolare 2019)
+        </h3>
+        <p>
+          Il controllo è riferito a ciascuna «miscela omogenea»: ai fini dell’accettazione,
+          calcestruzzo che — nell’ambito di una stessa ricetta di base — mantiene costanti i
+          requisiti di classe di resistenza e classe di esposizione (sono ammesse lievi modifiche
+          dei componenti per mantenere le prestazioni). In Kerios i prelievi sono quindi raggruppati
+          per miscela omogenea.
+        </p>
+        <p>La norma prevede due criteri, non convergenti, da usare in modo alternativo:</p>
+        <ul>
+          <li>
+            <strong>Tipo A (§11.2.5.1)</strong> — forfettario: ogni controllo è riferito a un
+            massimo di 300 m³ di miscela omogenea ed è costituito da 3 prelievi (terzina). Esito
+            positivo se R<sub>cm</sub> ≥ R<sub>ck</sub> + 3,5 e R<sub>c,min</sub> ≥ R<sub>ck</sub> −
+            3,5.
+          </li>
+          <li>
+            <strong>Tipo B (§11.2.5.2)</strong> — statistico: obbligatorio per più di 1500 m³ di
+            miscela omogenea; costituito da almeno 15 prelievi. Esito positivo se R<sub>cm</sub> ≥ R
+            <sub>ck</sub> + 1,48·s e R<sub>c,min</sub> ≥ R<sub>ck</sub> − 3,5 (s = scarto quadratico
+            medio dei prelievi).
+          </li>
+        </ul>
+        <p>
+          Il tipo di controllo è scelto dall’operatore (Direttore dei Lavori); Kerios lo suggerisce
+          in base a volume e numero di prelievi, ma la scelta resta libera.
+        </p>
+      </section>
+
       {guardrail.length > 0 && (
         <section className={styles.guardrail} aria-labelledby="gr-titolo">
           <h3 id="gr-titolo" className={styles.grTitolo}>
