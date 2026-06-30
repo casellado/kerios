@@ -61,3 +61,21 @@
   margin: 0 auto;
   padding: 32px 24px 48px;
 }
+
+/* Credito autore: fisso in basso a sinistra su tutte le pagine (non negli export).
+   Blu "Bic" (inchiostro biro). pointer-events:none → non intercetta i click. */
+.autore {
+  position: fixed;
+  left: 8px;
+  bottom: 6px;
+  z-index: 50;
+  font-size: 11px;
+  font-weight: 600;
+  font-style: italic;
+  color: #0033a0;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  padding: 2px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
+}

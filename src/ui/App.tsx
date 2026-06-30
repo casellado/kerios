@@ -51,6 +51,10 @@ export function App() {
           />
         </Routes>
       </main>
+
+      {/* Credito autore: visibile in basso a sinistra su TUTTE le pagine dell'app
+          (NON nei documenti esportati). */}
+      <span className={styles.autore}>by Geom. Dogano Casella</span>
     </div>
   );
 }
