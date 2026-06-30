@@ -82,6 +82,25 @@ describe('xlsxST36 — COMPILA il template (formattazione preservata)', () => {
     expect(merges).toContain('M7:M9'); // terzina
   });
 
+  it('firma: Direttore Lavori in M27 se impostato; vuoto → cella vuota', async () => {
+    const opts = {
+      intestazione: 'Strada',
+      numeroScheda: 1,
+      controlli: [mappaControlloST36(cd(), SOGLIE_DEFAULT)],
+      templateBuffer: templateBuffer(),
+    };
+    const conDl = await generaXlsxST36({ ...opts, direttoreLavori: 'Ing. Biagio Marra' });
+    const wbA = new ExcelJS.Workbook();
+    await wbA.xlsx.load(await conDl.arrayBuffer());
+    expect(wbA.worksheets[0].getCell('M27').value).toBe('Ing. Biagio Marra');
+
+    const senza = await generaXlsxST36(opts); // nessun DL
+    const wbB = new ExcelJS.Workbook();
+    await wbB.xlsx.load(await senza.arrayBuffer());
+    const v = wbB.worksheets[0].getCell('M27').value;
+    expect(v === '' || v == null).toBe(true);
+  });
+
   it('scrive intestazione, opera/pk e i dati prelievo', async () => {
     const ws = await genera();
     expect(ws.getCell('A1').value).toContain('Jonica');

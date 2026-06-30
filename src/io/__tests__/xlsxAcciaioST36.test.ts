@@ -154,4 +154,23 @@ describe('xlsxAcciaioST36 — COMPILA il template', () => {
       expect(pattern(a)).toBe('none');
     }
   });
+
+  it('firma: Direttore Lavori in O27 se impostato; vuoto → cella vuota', async () => {
+    const opts = {
+      intestazione: 'Strada',
+      numeroScheda: 1,
+      documento: mappaSchedaST36Acciaio([prelievo()]),
+      templateBuffer: templateBuffer(),
+    };
+    const conDl = await generaXlsxAcciaioST36({ ...opts, direttoreLavori: 'Ing. Biagio Marra' });
+    const wbA = new ExcelJS.Workbook();
+    await wbA.xlsx.load(await conDl.arrayBuffer());
+    expect(wbA.worksheets[0].getCell('O27').value).toBe('Ing. Biagio Marra');
+
+    const senza = await generaXlsxAcciaioST36(opts);
+    const wbB = new ExcelJS.Workbook();
+    await wbB.xlsx.load(await senza.arrayBuffer());
+    const v = wbB.worksheets[0].getCell('O27').value;
+    expect(v === '' || v == null).toBe(true);
+  });
 });

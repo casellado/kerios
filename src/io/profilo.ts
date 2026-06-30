@@ -17,6 +17,7 @@ export async function caricaProfilo(dir: HandleCartella): Promise<ProfiloCommess
     schema: SCHEMA_PROFILO,
     commessa: raw.commessa ?? dir.name,
     ...(raw.intestazione != null ? { intestazione: raw.intestazione } : {}),
+    ...(raw.direttoreLavori != null ? { direttoreLavori: raw.direttoreLavori } : {}),
   };
 }
 

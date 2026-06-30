@@ -35,6 +35,7 @@ export function SchedeViewAcciaio() {
   const prelievi = useStore((s) => s.prelieviAcciaio);
   const cartella = useStore((s) => s.cartella);
   const intestazione = useStore((s) => s.intestazione);
+  const direttoreLavori = useStore((s) => s.direttoreLavori);
   const revisioneDati = useStore((s) => s.revisioneDati);
   const segnaSporco = useStore((s) => s.segnaSporco);
 
@@ -112,6 +113,7 @@ export function SchedeViewAcciaio() {
     try {
       const blob = await generaXlsxAcciaioST36({
         intestazione,
+        direttoreLavori,
         numeroScheda: sch.numero,
         documento: mappaSchedaST36Acciaio(scelti),
       });

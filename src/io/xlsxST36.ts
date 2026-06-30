@@ -41,6 +41,8 @@ export interface OpzioniXlsxST36 {
   intestazione: string; // profilo (testo libero: R1 = riga 1, R2 = resto)
   numeroScheda: number;
   controlli: ControlloST36[]; // i controlli FLAGGATI (≤6)
+  /** Direttore Lavori (dal profilo): scritto in M27, sotto "IL DIRETTORE LAVORI". */
+  direttoreLavori?: string;
   /** Buffer del template (per i test). In runtime, se assente, si fa fetch dell'URL. */
   templateBuffer?: ArrayBuffer;
 }
@@ -84,6 +86,11 @@ export async function generaXlsxST36(opts: OpzioniXlsxST36): Promise<Blob> {
   } else if (opere.length > 1) {
     ws.getCell('A3').value = opere.join('  ·  ');
   }
+
+  // Firma: il nome del Direttore Lavori in M27 (sotto "IL DIRETTORE LAVORI" in M26,
+  // area unita M27:O27). Solo se impostato; vuoto → cella firma vuota come prima.
+  const dl = opts.direttoreLavori?.trim();
+  if (dl) ws.getCell('M27').value = dl;
 
   // --- Righe dati: una terzina per controllo (max 6). Le eccedenze restano VUOTE. ---
   opts.controlli.slice(0, 6).forEach((c, k) => {

@@ -43,6 +43,13 @@ interface StatoApp {
   setIntestazione: (t: string) => void;
 
   /**
+   * Direttore dei Lavori (solo nome) dal profilo-commessa: dato LOCALE, caricato
+   * all'aggancio della cartella come l'intestazione; scritto nella firma dell'ST36.
+   */
+  direttoreLavori: string;
+  setDirettoreLavori: (t: string) => void;
+
+  /**
    * Contatore di REVISIONE della cache (M4): lo si incrementa quando la cache
    * IndexedDB cambia fuori dal normale flusso (collegamento cartella, ricarica
    * dalla cartella, invalidazione versione). Le viste lo usano come dipendenza
@@ -84,6 +91,9 @@ export const useStore = create<StatoApp>((set) => ({
 
   intestazione: '',
   setIntestazione: (intestazione) => set({ intestazione }),
+
+  direttoreLavori: '',
+  setDirettoreLavori: (direttoreLavori) => set({ direttoreLavori }),
 
   revisioneDati: 0,
   ricarica: () => set((s) => ({ revisioneDati: s.revisioneDati + 1 })),

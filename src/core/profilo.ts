@@ -14,4 +14,7 @@ export interface ProfiloCommessa {
   commessa: string;
   /** Intestazione del cantiere a TESTO LIBERO (multi-riga, rispetta gli a-capo). */
   intestazione?: string;
+  /** Direttore dei Lavori (SOLO nome, una riga, es. "Ing. Biagio Marra"). Dato
+   *  LOCALE della commessa: compare nella firma del documento ST36, non nel software. */
+  direttoreLavori?: string;
 }

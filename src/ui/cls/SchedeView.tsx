@@ -41,6 +41,7 @@ export function SchedeView() {
   const prelievi = useStore((s) => s.prelievi);
   const soglie = useStore((s) => s.soglie);
   const intestazione = useStore((s) => s.intestazione);
+  const direttoreLavori = useStore((s) => s.direttoreLavori);
   const cartella = useStore((s) => s.cartella);
   const revisioneDati = useStore((s) => s.revisioneDati);
   const segnaSporco = useStore((s) => s.segnaSporco);
@@ -149,6 +150,7 @@ export function SchedeView() {
     try {
       const blob = await generaXlsxST36({
         intestazione,
+        direttoreLavori,
         numeroScheda: sch.numero,
         controlli: perDoc.map((cd) => mappaControlloST36(cd, soglie)),
       });

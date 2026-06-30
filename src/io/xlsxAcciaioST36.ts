@@ -25,6 +25,8 @@ export interface OpzioniXlsxAcciaioST36 {
   intestazione: string;
   numeroScheda: number;
   documento: DocumentoST36Acciaio;
+  /** Direttore Lavori (dal profilo): scritto in O27, sotto "IL DIRETTORE LAVORI". */
+  direttoreLavori?: string;
   /** buffer del template (per i test); se assente si fa fetch dell'URL statico. */
   templateBuffer?: ArrayBuffer;
 }
@@ -74,6 +76,11 @@ export async function generaXlsxAcciaioST36(opts: OpzioniXlsxAcciaioST36): Promi
       ws.getCell('A3').value = opera;
     }
   }
+
+  // Firma: il nome del Direttore Lavori in O27 (sotto "IL DIRETTORE LAVORI" in O26,
+  // area unita O27:Q27). Solo se impostato; vuoto → cella firma vuota come prima.
+  const dl = opts.direttoreLavori?.trim();
+  if (dl) ws.getCell('O27').value = dl;
 
   // righe dati: 1 per prelievo (max 18)
   const righe = opts.documento.righe.slice(0, MAX_RIGHE);

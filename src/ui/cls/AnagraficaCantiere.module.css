@@ -34,6 +34,23 @@
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
+/* Direttore Lavori: input a UNA riga (stesso stile dell'area, senza resize). */
+.riga {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.riga:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
 .azioni {
   display: flex;
   align-items: center;

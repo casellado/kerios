@@ -39,6 +39,7 @@ export function CartellaLavoro() {
   const segnaPulito = useStore((s) => s.segnaPulito);
   const setCartella = useStore((s) => s.setCartella);
   const setIntestazione = useStore((s) => s.setIntestazione);
+  const setDirettoreLavori = useStore((s) => s.setDirettoreLavori);
   const inputId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -74,9 +75,10 @@ export function CartellaLavoro() {
 
   /** Eredita il progetto dalla cartella → rigenera la cache → notifica le viste. */
   async function ereditaDa(dir: HandleCartella): Promise<void> {
-    // intestazione cantiere dal profilo (assente/vecchio → vuota, nessun blocco)
+    // intestazione + Direttore Lavori dal profilo (assente/vecchio → vuoti, nessun blocco)
     const profilo = await caricaProfilo(dir);
     setIntestazione(profilo?.intestazione ?? '');
+    setDirettoreLavori(profilo?.direttoreLavori ?? '');
     const progetto = await caricaProgettoDaCartella(dir);
     if (progetto) {
       await applicaProgettoACache(progetto);
@@ -201,6 +203,7 @@ export function CartellaLavoro() {
     setHandle(null);
     setCartella(null);
     setIntestazione('');
+    setDirettoreLavori('');
     setDaRiaprire(null);
     avvisa('Cartella scollegata. La cache resta finché non la ricarichi o reimporti.');
   }
